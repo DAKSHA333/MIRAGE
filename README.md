@@ -18,10 +18,10 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.1.0-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.1.1-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
-5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel and grant temporary tab access.
-6. Click **Connect current chat**. Connection identifies the active tab; actual adapter compatibility is checked when inserting or reading.
+5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
+6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
 
 The latest ZIP has the manifest at its root. `MIRAGE-v1-extension.zip` is the older prototype and is retained only for reference.
 
@@ -55,7 +55,7 @@ Rules can miss data or produce false positives. Names and addresses are not comp
 
 ## Permissions and privacy
 
-The extension requests only `sidePanel`, `activeTab` and `scripting`. It has no persistent host permissions, background page monitoring, storage permission, analytics, external scripts, cloud scanner or account. Only supported HTTPS ChatGPT/Gemini origins can receive the approved preview. Provider adapters execute in the isolated world, in the top frame, and verify the connected tab and URL.
+The extension installs with only `sidePanel`, `activeTab` and `scripting`. It declares ChatGPT and Gemini as optional host permissions; MIRAGE requests the selected site only when you click Connect, and Disconnect removes that grant. It has no install-time host access, background page monitoring, storage permission, analytics, external scripts, cloud scanner or account. Only supported HTTPS ChatGPT/Gemini origins can receive the approved preview. Provider adapters execute in the isolated world, in the top frame, and verify the connected tab and URL.
 
 The local workspace supports manual copy/paste. Chrome integration requires the installed extension. No AWS services are configured; adding optional AWS processing needs a separately evaluated privacy boundary.
 

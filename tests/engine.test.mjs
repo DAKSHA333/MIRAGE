@@ -68,9 +68,10 @@ test('oversized input is rejected', () => assert.throws(() => scan('x'.repeat(30
 test('Luhn rejects invalid and repeated digits', () => {
   assert.equal(luhn('4111111111111111'), true); assert.equal(luhn('4111111111111112'), false); assert.equal(luhn('0000000000000000'), false);
 });
-test('extension has no host permissions or cloud connectivity', async () => {
+test('extension has no install-time host permissions or cloud connectivity', async () => {
   const manifest = JSON.parse(await readFile(new URL('../extension/manifest.json', import.meta.url)));
   assert.equal(manifest.manifest_version, 3); assert.deepEqual(manifest.permissions, ['sidePanel', 'activeTab', 'scripting']); assert.equal(manifest.host_permissions, undefined);
+  assert.deepEqual(manifest.optional_host_permissions, ['https://chatgpt.com/*', 'https://gemini.google.com/*']);
   assert.match(manifest.content_security_policy.extension_pages, /connect-src 'none'/);
   assert.ok(manifest.description.length <= 132);
 });

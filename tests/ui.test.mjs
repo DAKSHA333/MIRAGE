@@ -7,20 +7,26 @@ import * as vault from '../extension/vault.js';
 
 const html = await readFile(new URL('../extension/index.html', import.meta.url), 'utf8');
 const script = (await readFile(new URL('../extension/app.js', import.meta.url), 'utf8')).replace(/^import .*;\r?\n/gm, '');
-function setup(extension = false) {
+function setup(extension = false, permissionGranted = true) {
   const dom = new JSDOM(html, { url: extension ? 'chrome-extension://TEST/index.html' : 'http://127.0.0.1:4173', runScripts: 'outside-only' });
-  const w = dom.window, writes = [], messages = [];
+  const w = dom.window, writes = [], messages = [], permissionRequests = [], permissionRemovals = [];
   Object.defineProperty(w, 'crypto', { value: globalThis.crypto });
   Object.defineProperty(w.navigator, 'clipboard', { value: { writeText: async value => { writes.push(value); } } });
   w.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   w.HTMLDialogElement.prototype.close = function () { this.open = false; };
-  if (extension) w.chrome = { runtime: { id: 'TEST', sendMessage: async message => { messages.push(message); return message.type === 'connect' ? { ok: true, target: { tabId: 1, url: 'https://chatgpt.com/c/demo', name: 'ChatGPT' } } : { ok: true, text: 'Sample reply' }; } } };
+  if (extension) w.chrome = {
+    runtime: { id: 'TEST', sendMessage: async message => { messages.push(message); const origin = message.expectedOrigin || 'https://chatgpt.com'; const name = origin.includes('gemini') ? 'Gemini' : 'ChatGPT'; return message.type === 'connect' ? { ok: true, target: { tabId: 1, url: `${origin}/c/demo`, name, permissionOrigin: origin } } : { ok: true, text: 'Sample reply' }; } },
+    permissions: {
+      request: async request => { permissionRequests.push(request); return permissionGranted; },
+      remove: async request => { permissionRemovals.push(request); return true; }
+    }
+  };
   w.__dependencies = { ...engine, ...vault };
   w.eval('const { scan, restore, SessionVault, newSessionId, encryptBackup, decryptBackup } = __dependencies;\n' + script);
   const el = id => w.document.getElementById(id);
   const input = (id, text) => { el(id).value = text; el(id).dispatchEvent(new w.Event('input', { bubbles: true })); };
   const approve = () => { el('reviewed').checked = true; el('reviewed').dispatchEvent(new w.Event('change')); };
-  return { dom, w, el, input, approve, writes, messages, close: () => dom.window.close() };
+  return { dom, w, el, input, approve, writes, messages, permissionRequests, permissionRemovals, close: () => dom.window.close() };
 }
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 test('preview approval gates copying and edits revoke the approval', async () => {
@@ -57,10 +63,17 @@ test('clear requires confirmation and discards original text and all mapping cho
   assert.equal(f.el('prompt').value, ''); assert.equal(f.el('session-select').value, ''); assert.equal(f.el('restore').disabled, true); assert.equal(f.el('copy').disabled, true); f.close();
 });
 test('side-panel bridge receives approved masked text, never original values', async () => {
-  const f = setup(true); f.el('connect').click(); await tick();
+  const f = setup(true); f.el('connect').click(); await tick(); await tick();
+  assert.equal(JSON.stringify(f.permissionRequests), JSON.stringify([{ origins: ['https://chatgpt.com/*'] }]));
   f.el('sample-personal').click(); f.el('scan').click(); f.approve(); f.el('insert').click(); await tick();
   const message = f.messages.find(x => x.type === 'insert'); assert.ok(message); assert.match(message.text, /\[MG_/);
   assert.ok(!JSON.stringify(f.messages).includes('Priya Nair')); assert.ok(!JSON.stringify(f.messages).includes('ABCDE1234F')); f.close();
+});
+test('connection asks only for the selected site and handles denial without messaging the worker', async () => {
+  const denied = setup(true, false); denied.el('provider-choice').value = 'https://gemini.google.com'; denied.el('connect').click(); await tick(); await tick();
+  assert.equal(JSON.stringify(denied.permissionRequests), JSON.stringify([{ origins: ['https://gemini.google.com/*'] }])); assert.equal(denied.messages.length, 0); assert.match(denied.el('error-banner').textContent, /not granted/); denied.close();
+  const connected = setup(true); connected.el('connect').click(); await tick(); await tick(); connected.el('disconnect').click(); await tick();
+  assert.equal(JSON.stringify(connected.permissionRemovals), JSON.stringify([{ origins: ['https://chatgpt.com/*'] }])); assert.equal(connected.el('connect').hidden, false); connected.close();
 });
 test('backup dialog cancels without retaining passphrase fields', () => {
   const f = setup(); f.el('sample-personal').click(); f.el('scan').click(); f.el('save-vault').click();

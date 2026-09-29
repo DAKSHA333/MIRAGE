@@ -9,6 +9,7 @@ const manifest = JSON.parse(await readFile(join(source, 'manifest.json'), 'utf8'
 const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 if (manifest.version !== pkg.version) throw new Error('Package and extension versions differ.');
 if (manifest.host_permissions || manifest.content_scripts || manifest.web_accessible_resources || manifest.externally_connectable) throw new Error('Unexpected browser exposure in manifest.');
+if (JSON.stringify(manifest.optional_host_permissions) !== JSON.stringify(['https://chatgpt.com/*', 'https://gemini.google.com/*'])) throw new Error('Optional provider permissions must match the reviewed allowlist.');
 const files = (await readdir(source)).sort();
 for (const file of files.filter(f => f.endsWith('.js'))) execFileSync(process.execPath, ['--check', join(source, file)]);
 for (const required of ['index.html', 'engine.js', 'vault.js', 'providers.js', 'background.js', 'app.js', 'styles.css', 'privacy.html']) if (!files.includes(required)) throw new Error('Missing ' + required);

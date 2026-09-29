@@ -14,7 +14,7 @@ Restored values are displayed only in MIRAGE. No vault, original prompt or passp
 - Plain-text DOM rendering to prevent HTML execution from prompts and replies.
 - Fifteen-minute in-memory expiry and session clearing on page lifecycle transitions.
 - Explicit authenticated encrypted backups with fixed KDF parameters and validated sizes/schema. No plaintext disk persistence.
-- Extension-page sender validation; supported HTTPS origin allowlist; active tab and exact URL checks before injection, repeated inside the adapter.
+- Extension-page sender validation; explicit optional access to the selected supported HTTPS origin; active tab, selected provider and exact URL checks before injection, repeated inside the adapter. Disconnect revokes the selected origin grant.
 - No automatic Send, no overwrite of existing drafts, no heuristic search through unrelated page content.
 - Strict extension CSP, no network connections, no third-party runtime code.
 - Loopback development server, fixed resource allowlist, Host validation, no-store responses and frame restrictions.

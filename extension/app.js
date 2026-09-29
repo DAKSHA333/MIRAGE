@@ -5,6 +5,7 @@ const $ = id => document.getElementById(id);
 const prompt = $('prompt');
 const vault = new SessionVault();
 const isExtension = location.protocol === 'chrome-extension:' && Boolean(globalThis.chrome?.runtime?.id);
+const allowedProviderOrigins = new Set(['https://chatgpt.com', 'https://gemini.google.com']);
 let result = null, restoredText = null, target = null, busy = false, generation = 0;
 let toastTimer, backupMode = 'save', backupFile = null;
 
@@ -21,6 +22,8 @@ function updateActions() {
   $('demo-reply').disabled = !$('session-select').value || busy;
   $('save-vault').disabled = !vault.list().length || busy;
   $('connect').disabled = busy;
+  $('provider-choice').disabled = busy || Boolean(target);
+  $('disconnect').disabled = busy;
   $('load-vault').disabled = busy;
 }
 function updateSessions(selected = $('session-select').value) {
@@ -46,7 +49,7 @@ function invalidateScan() {
 }
 function closeBackup() { generation++; $('vault-dialog').close(); $('passphrase').value = ''; $('confirm-passphrase').value = ''; backupFile = null; $('backup-file').value = ''; busy = false; $('submit-vault').disabled = false; updateActions(); }
 function wipe(message = '') {
-  generation++; vault.clear(); prompt.value = ''; $('custom').value = ''; $('reply').value = ''; target = null;
+  generation++; vault.clear(); prompt.value = ''; $('custom').value = ''; $('reply').value = '';
   closeBackup(); $('clear-dialog').close(); clearError(); invalidateScan(); invalidateReply(); updateSessions(); updateConnection();
   if (message) toast(message);
 }
@@ -55,9 +58,10 @@ function ensureActive() {
   vault.touch(); return true;
 }
 function updateConnection() {
-  $('connect').hidden = !isExtension; $('insert').hidden = !isExtension; $('read-reply').hidden = !isExtension;
-  if (target) { $('connection-title').textContent = `${target.name} · connected for this chat`; $('connection-note').textContent = 'Approved preview only. Inserting makes it visible to this website, but does not click Send.'; $('connect').textContent = 'Reconnect current chat'; }
-  else if (isExtension) { $('connection-title').textContent = 'Private Chrome side panel'; $('connection-note').textContent = 'Open ChatGPT or Gemini, click MIRAGE in the toolbar, then connect. Chat integration is beta.'; $('connect').textContent = 'Connect current chat'; }
+  $('connection-controls').hidden = !isExtension; $('insert').hidden = !isExtension; $('read-reply').hidden = !isExtension;
+  $('connect').hidden = Boolean(target); $('disconnect').hidden = !target;
+  if (target) { $('connection-title').textContent = `${target.name} · connected for this chat`; $('connection-note').textContent = 'Approved preview only. Inserting makes it visible to this website, but does not click Send. Disconnect removes MIRAGE’s site access.'; }
+  else if (isExtension) { $('connection-title').textContent = 'Private Chrome side panel'; $('connection-note').textContent = 'Choose the active chatbot and connect. Chrome may ask you to allow access to that site only.'; $('connect').textContent = 'Connect current chat'; }
   else { $('connection-title').textContent = location.hostname === '127.0.0.1' || location.hostname === 'localhost' ? 'Local workspace' : 'Browser workspace'; $('connection-note').textContent = 'Text is processed in your browser. Install the Chrome extension for the private side panel and chat insertion.'; }
   updateActions();
 }
@@ -128,8 +132,8 @@ $('clear').addEventListener('click', () => { if (vault.list().length || prompt.v
 $('cancel-clear').addEventListener('click', () => $('clear-dialog').close());
 $('confirm-clear').addEventListener('click', () => { wipe('Session cleared. Encrypted backup files and clipboard are unchanged.'); prompt.focus(); });
 
-async function bridge(type, text) {
-  const response = await chrome.runtime.sendMessage({ type, ...(target ? { tabId: target.tabId, url: target.url } : {}), ...(text === undefined ? {} : { text }) });
+async function bridge(type, text, expectedOrigin) {
+  const response = await chrome.runtime.sendMessage({ type, ...(target ? { tabId: target.tabId, url: target.url } : {}), ...(expectedOrigin ? { expectedOrigin } : {}), ...(text === undefined ? {} : { text }) });
   if (!response?.ok) throw new Error(response?.error || 'Chat connection unavailable. Copy and paste manually.'); return response;
 }
 async function runBridge(action) {
@@ -137,7 +141,28 @@ async function runBridge(action) {
   try { await action(epoch); } catch (error) { if (epoch === generation) { target = null; updateConnection(); fail(error.message); } }
   finally { if (epoch === generation) { busy = false; updateActions(); } }
 }
-$('connect').addEventListener('click', () => runBridge(async epoch => { const r = await bridge('connect'); if (epoch === generation) { target = r.target; updateConnection(); toast(`Connected to ${target.name}. Review your preview before inserting.`); } }));
+$('connect').addEventListener('click', () => runBridge(async epoch => {
+  const expectedOrigin = $('provider-choice').value;
+  if (!allowedProviderOrigins.has(expectedOrigin)) throw new Error('Choose ChatGPT or Gemini.');
+  // Called directly from the button gesture. Chrome shows a clear, site-specific
+  // permission prompt and grants nothing if the user declines.
+  const permission = { origins: [`${expectedOrigin}/*`] };
+  const granted = await chrome.permissions.request(permission);
+  if (!granted) throw new Error(`Chrome access to ${new URL(expectedOrigin).hostname} was not granted. Allow it when Chrome asks, or use manual copy and paste.`);
+  try {
+    const r = await bridge('connect', undefined, expectedOrigin);
+    if (epoch === generation) { target = r.target; updateConnection(); toast(`Connected to ${target.name}. Review your preview before inserting.`); }
+  } catch (error) { await chrome.permissions.remove(permission); throw error; }
+}));
+$('disconnect').addEventListener('click', async () => {
+  if (!target || busy) return;
+  const origin = target.permissionOrigin; target = null; clearError(); updateConnection();
+  try {
+    if (allowedProviderOrigins.has(origin)) await chrome.permissions.remove({ origins: [`${origin}/*`] });
+    toast('Disconnected. MIRAGE site access was removed.');
+  } catch { fail('Disconnected, but Chrome could not remove the site grant. Remove MIRAGE site access from the extension settings.'); }
+});
+$('provider-choice').addEventListener('change', clearError);
 $('insert').addEventListener('click', () => {
   if (!result || result.blocked || !$('reviewed').checked || !target) return;
   const approvedText = result.masked;

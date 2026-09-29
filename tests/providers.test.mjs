@@ -70,6 +70,14 @@ test('worker rejects webpage, other extension and unknown extension page message
     const fake = api(); assert.equal((await handleMessage({ type: 'connect' }, bad, fake)).ok, false); assert.equal(fake.calls.length, 0);
   }
 });
+test('worker validates the requested provider before connecting', async () => {
+  const fake = api();
+  assert.equal((await handleMessage({ type: 'connect', expectedOrigin: 'https://example.com' }, sender, fake)).ok, false);
+  const mismatch = await handleMessage({ type: 'connect', expectedOrigin: 'https://gemini.google.com' }, sender, fake);
+  assert.equal(mismatch.ok, false); assert.match(mismatch.error, /ChatGPT/); assert.equal(fake.calls.length, 0);
+  const connected = await handleMessage({ type: 'connect', expectedOrigin: 'https://chatgpt.com' }, sender, fake);
+  assert.equal(connected.ok, true); assert.equal(connected.target.permissionOrigin, 'https://chatgpt.com');
+});
 test('worker enforces the connected tab and chat URL before any script runs', async () => {
   for (const message of [{ type: 'insert', tabId: 8, url: 'https://chatgpt.com/c/demo', text: 'masked' }, { type: 'read', tabId: 7, url: 'https://chatgpt.com/c/other' }]) {
     const fake = api(); assert.equal((await handleMessage(message, sender, fake)).ok, false); assert.equal(fake.calls.length, 0);

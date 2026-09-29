@@ -1,8 +1,8 @@
-# Verification — MIRAGE 1.1.0 RC
+# Verification — MIRAGE 1.1.1 RC
 
 ## Automated results
 
-- `npm test`: **58 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, UI approval and stale-state gates, plain-text rendering, worker authorization and provider DOM fixtures.
+- `npm test`: **60 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
 - One regression test additionally runs 250 deterministic round-trip combinations. These are correctness cases, not a representative accuracy benchmark.
 - Backup tests cover AES-GCM round trip, wrong passphrase, tampering, bounded parameters/schema, import conflicts, session expiry and cancellation.
 - DOM-based UI test completes encrypted download creation, clear, backup unlock, and restoration of an earlier reply.
@@ -18,7 +18,7 @@ Mouse automation was unreliable in that browser session and was not conclusively
 
 ## Explicitly not verified
 
-- Actual Chrome extension installation and service-worker/side-panel lifecycle.
+- Full Chrome service-worker/side-panel lifecycle after the 1.1.1 permission-flow update. The user supplied evidence that 1.1.0 opened as a side panel, and that its active-tab-only connection failed.
 - Signed-in live ChatGPT/Gemini adapters, provider transmissions, or streaming reply behavior. Adapters were tested against synthetic fixtures only.
 - Browser-native backup file download/upload completion; DOM tests verified app behavior and encryption.
 - Independent security review, broad detection accuracy, store approval or production rollout.
