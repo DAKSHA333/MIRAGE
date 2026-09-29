@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.vercel/
+.env
+.env.*
+!.env.example
+web-dist/
+*.mirage
