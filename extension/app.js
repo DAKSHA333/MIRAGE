@@ -9,6 +9,7 @@ const allowedProviderOrigins = new Set(['https://chatgpt.com', 'https://gemini.g
 let result = null, restoredText = null, target = null, busy = false, generation = 0;
 let demoMode = false, receiptStatus = 'Awaiting your review';
 let toastTimer, backupMode = 'save', backupFile = null;
+let installPrompt = null;
 
 function toast(message) { $('toast').textContent = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').textContent = ''; }, 5000); }
 function fail(message) { $('error-banner').textContent = message; $('error-banner').hidden = false; $('announcement').textContent = message; }
@@ -81,9 +82,30 @@ function updateConnection() {
   $('connect').hidden = Boolean(target); $('disconnect').hidden = !target;
   if (target) { $('connection-title').textContent = `${target.name} · connected for this chat`; $('connection-note').textContent = 'Approved preview only. Inserting makes it visible to this website, but does not click Send. Disconnect removes MIRAGE’s site access.'; }
   else if (isExtension) { $('connection-title').textContent = 'Private Chrome side panel'; $('connection-note').textContent = 'Choose the active chatbot and connect. Chrome may ask you to allow access to that site only.'; $('connect').textContent = 'Connect current chat'; }
-  else { $('connection-title').textContent = location.hostname === '127.0.0.1' || location.hostname === 'localhost' ? 'Local workspace' : 'Browser workspace'; $('connection-note').textContent = 'Text is processed in your browser. Install the Chrome extension for the private side panel and chat insertion.'; }
+  else {
+    const standalone = globalThis.matchMedia?.('(display-mode: standalone)').matches;
+    $('connection-title').textContent = location.hostname === '127.0.0.1' || location.hostname === 'localhost' ? 'Local workspace' : standalone ? 'Installed desktop workspace' : 'Browser workspace';
+    $('connection-note').textContent = standalone ? 'Local masking and restoration remain available offline. Use the Chrome extension when you want direct chat insertion.' : 'Text is processed in your browser. Install this desktop workspace or use the Chrome extension for direct chat insertion.';
+  }
   updateActions();
 }
+
+function updateRuntimeMode() {
+  const standalone = globalThis.matchMedia?.('(display-mode: standalone)').matches;
+  $('runtime-mode').textContent = navigator.onLine === false ? 'Offline · Local mode' : standalone ? 'Desktop app · Local mode' : 'Local mode';
+}
+
+if (!isExtension && document.querySelector('link[rel="manifest"]') && (location.protocol === 'https:' || ['127.0.0.1', 'localhost'].includes(location.hostname))) {
+  $('install-app').hidden = false;
+  window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; $('install-app').hidden = true; updateRuntimeMode(); toast('MIRAGE installed. You can now open it like a desktop app.'); });
+  $('install-app').addEventListener('click', async () => {
+    if (!installPrompt) { toast('Use your browser menu and choose Install MIRAGE or Apps → Install this site as an app.'); return; }
+    installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null;
+  });
+}
+window.addEventListener('online', updateRuntimeMode);
+window.addEventListener('offline', updateRuntimeMode);
 function renderMasked(text) {
   const output = $('masked'); output.replaceChildren(); let cursor = 0;
   for (const m of text.matchAll(/\[MG_[A-Z0-9]+_[A-Z]+_\d+\]/g)) {
@@ -245,4 +267,4 @@ window.addEventListener('pagehide', () => wipe());
 // Restoring a back-forward cached page must never resurrect its old approval.
 window.addEventListener('pageshow', event => { if (event.persisted) wipe('Returned to an empty session. Unlock a backup to restore earlier scans.'); });
 window.addEventListener('beforeunload', event => { if (vault.list().length) { event.preventDefault(); event.returnValue = ''; } });
-updateSessions(); updateConnection();
+updateSessions(); updateConnection(); updateRuntimeMode();

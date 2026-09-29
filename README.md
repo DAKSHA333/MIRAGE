@@ -1,4 +1,4 @@
-# MIRAGE 1.4 — Release candidate
+# MIRAGE 1.5 — Release candidate
 
 A private AI drafting workspace for Team Nexora. Write in MIRAGE, mask locally, review the preview, and share only that preview. Restore AI replies inside MIRAGE.
 
@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.4.0-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.5.0-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
 5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
 6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
@@ -41,6 +41,12 @@ For a demonstration without an AI account, use **Intern onboarding**, **Scan & m
 **Start 90-second demo** loads the synthetic intern-onboarding scenario and guides a presenter through local scanning, preview review, masked sharing and local restoration. It never approves, inserts or sends on the presenter’s behalf.
 
 Every completed scan produces a local privacy receipt with the number of matches, unique masked values, known originals remaining in the preview and current sharing status. The receipt describes MIRAGE’s deterministic checks; it is not a claim that unknown personal data cannot be present. The patient follow-up example also demonstrates user-supplied protection for a health term and address.
+
+## Installable desktop workspace
+
+The hosted workspace is a Progressive Web App. In Chrome or Edge, click **Install desktop app** in MIRAGE and accept the browser installation prompt. It opens in its own window and, after the first successful load, its local masking, restoration, demo and encrypted-backup features can start offline.
+
+The offline cache contains only versioned static application files. It never stores prompts, replies, token mappings, passphrases, analytics or extension downloads. In standalone mode, use copy/paste with any desktop AI application. Direct insertion and reply reading remain Chrome-extension features because a standalone web app cannot inspect another application's window.
 
 ## Session vault
 
@@ -67,7 +73,7 @@ The local workspace supports manual copy/paste. Chrome integration requires the 
 
 ## Optional AWS production path
 
-Version 1.4 adds a deployable AWS SAM stack matching the challenge architecture while preserving the local-first boundary. After local identifiers and secrets are removed, a future opt-in flow can send masked English text through Cognito and API Gateway to Lambda. Lambda runs a second residual-data check, asks Amazon Comprehend only for name/address suggestions, and returns character offsets without echoing detected values. DynamoDB stores approximate daily counts with a 90-day expiry, never prompt text or token mappings.
+Version 1.4 added a deployable AWS SAM stack matching the challenge architecture while preserving the local-first boundary. After local identifiers and secrets are removed, a future opt-in flow can send masked English text through Cognito and API Gateway to Lambda. Lambda runs a second residual-data check, asks Amazon Comprehend only for name/address suggestions, and returns character offsets without echoing detected values. DynamoDB stores approximate daily counts with a 90-day expiry, never prompt text or token mappings.
 
 The AWS source is prepared and unit-tested but not deployed or connected to this release because this machine has no configured AWS CLI credentials. The live app therefore continues to make no prompt network request. See `infra/aws/README.md` for deployment steps and `docs/AWS-ARCHITECTURE.md` for the data boundaries.
 
@@ -95,6 +101,7 @@ The deterministic build validates JavaScript and the manifest, packages extensio
 | `extension/background.js` | Validated extension-only message boundary |
 | `extension/providers.js` | Narrow provider adapters, no Send action |
 | `scripts/build.mjs` | Deterministic ZIP and file hashes |
+| `web/` | Install manifest, local-only offline worker and desktop icons |
 | `infra/aws/` | Optional authenticated AWS scan stack and Lambda boundary |
 | `tests/` | Detection, security, crypto, UI and adapter tests |
 

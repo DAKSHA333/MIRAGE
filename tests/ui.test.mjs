@@ -7,9 +7,10 @@ import * as vault from '../extension/vault.js';
 
 const html = await readFile(new URL('../extension/index.html', import.meta.url), 'utf8');
 const script = (await readFile(new URL('../extension/app.js', import.meta.url), 'utf8')).replace(/^import .*;\r?\n/gm, '');
-function setup(extension = false, permissionGranted = true) {
+function setup(extension = false, permissionGranted = true, pwa = false) {
   const dom = new JSDOM(html, { url: extension ? 'chrome-extension://TEST/index.html' : 'http://127.0.0.1:4173', runScripts: 'outside-only' });
   const w = dom.window, writes = [], messages = [], permissionRequests = [], permissionRemovals = [];
+  if (pwa) { const link = w.document.createElement('link'); link.rel = 'manifest'; link.href = '/site.webmanifest'; w.document.head.append(link); }
   Object.defineProperty(w, 'crypto', { value: globalThis.crypto });
   Object.defineProperty(w.navigator, 'clipboard', { value: { writeText: async value => { writes.push(value); } } });
   w.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
@@ -36,6 +37,10 @@ test('preview approval gates copying and edits revoke the approval', async () =>
   f.approve(); f.el('copy').click(); await tick(); assert.equal(f.writes.length, 1);
   assert.match(f.writes[0], /\[MG_/); assert.ok(!f.writes[0].includes('Ananya Deshmukh'));
   f.input('prompt', 'new draft'); assert.equal(f.el('copy').disabled, true); assert.equal(f.el('reviewed').checked, false); f.close();
+});
+test('hosted workspace exposes desktop installation while the extension does not', () => {
+  const web = setup(false, true, true); assert.equal(web.el('install-app').hidden, false); web.close();
+  const extension = setup(true); assert.equal(extension.el('install-app').hidden, true); extension.close();
 });
 test('detected secrets disable review, copy and insertion', () => {
   const f = setup(true); f.el('sample-secret').click(); f.el('scan').click();

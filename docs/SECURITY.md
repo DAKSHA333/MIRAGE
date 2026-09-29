@@ -1,4 +1,4 @@
-# Security model — MIRAGE 1.4 RC
+# Security model — MIRAGE 1.5 RC
 
 ## Protected boundary
 
@@ -20,6 +20,7 @@ Restored values are displayed only in MIRAGE. No vault, original prompt or passp
 - No automatic Send, no overwrite of existing drafts, no heuristic search through unrelated page content.
 - Strict extension CSP, no network connections, no third-party runtime code.
 - Loopback development server, fixed resource allowlist, Host validation, no-store responses and frame restrictions.
+- Installable web workspace with a versioned, same-origin, GET-only application-shell cache. Prompts, replies, mappings, backups and downloads are excluded from the offline cache.
 
 ## Prepared AWS boundary
 
@@ -36,6 +37,8 @@ A compromised operating system, malicious privileged extension, unlocked physica
 Regex detection does not provide comprehensive entity recognition. Health data and contextual re-identification are not eliminated by masking identifiers. Unicode support is selective. User review remains necessary.
 
 Suspended-page timers can be delayed. Expiry checks run when the page returns or a protected action is used. Passphrases/plaintext necessarily exist transiently during encryption/decryption; JavaScript does not guarantee their physical erasure.
+
+Offline availability does not extend the session lifetime or persist token mappings. Reloading, closing or navigating away still clears in-memory mappings. Users need an encrypted backup to restore them later. A service worker can be replaced if the hosting origin or browser profile is compromised; the same operating-system and browser trust assumptions apply as in online mode.
 
 ## Before public release
 

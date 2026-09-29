@@ -6,11 +6,15 @@ await mkdir(output, { recursive: true });
 for (const name of ['index.html','privacy.html','styles.css','boot.js','app.js','engine.js','vault.js','icon.svg']) {
   await copyFile(new URL('extension/' + name, root), new URL(name, output));
 }
+for (const name of ['site.webmanifest', 'sw.js']) await copyFile(new URL('web/' + name, root), new URL(name, output));
+await mkdir(new URL('icons/', output), { recursive: true });
+for (const name of ['mirage-192.png', 'mirage-512.png']) await copyFile(new URL('web/icons/' + name, root), new URL('icons/' + name, output));
 const manifest = JSON.parse(await readFile(new URL('dist/release-manifest.json', root), 'utf8'));
 await mkdir(new URL('downloads/', output), { recursive: true });
 await copyFile(new URL('dist/' + manifest.release, root), new URL('downloads/' + manifest.release, output));
 await copyFile(new URL('dist/release-manifest.json', root), new URL('downloads/release-manifest.json', output));
 let html = await readFile(new URL('index.html', output), 'utf8');
+html = html.replace('</head>', '  <link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#176b55"><link rel="apple-touch-icon" href="/icons/mirage-192.png">\n</head>');
 html = html.replace('Local workspace</strong>', 'Browser workspace</strong>');
 html = html.replace('Copy and paste works here. Install the Chrome extension for the private side panel and chat insertion.', 'Text is processed in your browser. Use the Chrome extension for the private side panel and chat insertion.');
 html = html.replace('<section class="work-grid"', `<p class="mode-note"><a href="downloads/${manifest.release}" download>Download the Chrome extension (${manifest.version} RC)</a> · Extract the ZIP, then Load unpacked in Chrome’s extension settings.</p><section class="work-grid"`);

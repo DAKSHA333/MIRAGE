@@ -12,12 +12,14 @@
   <article class="privacy-page">
     <a href="index.html">← Back to MIRAGE</a>
     <h1>Privacy & security</h1>
-    <p><strong>MIRAGE processes prompts with local rules in your browser.</strong> It has no analytics, account, active remote scanner, or prompt API. This notice applies to the 1.4.0 release candidate.</p>
+    <p><strong>MIRAGE processes prompts with local rules in your browser.</strong> It has no analytics, account, active remote scanner, or prompt API. This notice applies to the 1.5.0 release candidate.</p>
     <h2>Where your data goes</h2>
     <p>Original drafts, token mappings, passphrases, and restored replies stay inside the MIRAGE page or extension side panel. When you click <strong>Insert into chat</strong>, only the preview you approved is given to the supported chatbot page. Insertion itself makes that preview accessible to the website, even before you press Send.</p>
     <p>The <strong>Get latest reply</strong> button reads the latest supported assistant response from the connected page. Restoration happens only in MIRAGE. The extension does not place your original details into the chatbot’s page.</p>
     <h2>Hosted web workspace</h2>
     <p>The hosted version serves app files through Vercel. Your prompt text is processed in your browser and is not submitted to the hosting service by MIRAGE. Vercel can receive ordinary page-request metadata such as IP address and browser information. The Chrome extension runs from its packaged files. No analytics are installed in either version.</p>
+    <h2>Installed desktop and offline mode</h2>
+    <p>The hosted workspace can be installed from a supported browser. Its service worker caches only MIRAGE’s static interface and local masking code so the workspace can start offline. Prompt text, token mappings, replies and encrypted-backup passphrases are never added to that cache. Clearing browser site data removes the offline app files; it does not remove encrypted backup files you downloaded separately.</p>
     <h2>Optional AWS architecture</h2>
     <p>The repository includes an undeployed AWS stack for authenticated, user-consented analysis of locally masked English text. It is not connected in this release. If enabled later, Amazon Comprehend would return name and address offsets; MIRAGE application code would store only expiring daily aggregate counts, not prompts or detected values. Enabling it will require a separate privacy review, authentication flow and updated notice.</p>
     <h2>Permissions</h2>

@@ -30,4 +30,4 @@ Daily counters are operational indicators, not billing-grade records. DynamoDB a
 
 ## Current release state
 
-The SAM stack and tested Lambda core are deployment-ready source artifacts. They are not deployed because this machine has no configured AWS CLI or account credentials. MIRAGE 1.4 continues to run in local mode, with no prompt network request. Connecting AWS assistance is a separate release step that requires authentication UX, consent UX, end-to-end browser testing, an AWS privacy review and cost controls.
+The SAM stack and tested Lambda core are deployment-ready source artifacts. They are not deployed because this machine has no configured AWS CLI or account credentials. MIRAGE 1.5 continues to run in local mode, with no prompt network request. Connecting AWS assistance is a separate release step that requires authentication UX, consent UX, end-to-end browser testing, an AWS privacy review and cost controls.
