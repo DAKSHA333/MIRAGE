@@ -40,6 +40,7 @@ test('preview approval gates copying and edits revoke the approval', async () =>
 test('detected secrets disable review, copy and insertion', () => {
   const f = setup(true); f.el('sample-secret').click(); f.el('scan').click();
   assert.equal(f.el('blocked-view').hidden, false); assert.equal(f.el('reviewed').disabled, true); assert.equal(f.el('copy').disabled, true); assert.equal(f.el('insert').disabled, true);
+  assert.equal(f.el('privacy-receipt').hidden, false); assert.equal(f.el('receipt-status').textContent, 'Sharing blocked');
   assert.equal(f.el('session-select').options.length, 1); assert.equal(f.el('session-select').value, ''); f.close();
 });
 test('editing a new draft retains the earlier scan for reply restoration', () => {
@@ -58,6 +59,21 @@ test('onboarding demo masks realistic fields and restores a formatted local repl
   f.el('restore').click();
   for (const value of ['Ananya Deshmukh', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(f.el('restored').textContent.includes(value));
   f.close();
+});
+test('judge mode guides the complete local privacy loop and produces a receipt', () => {
+  const f = setup(); f.el('start-demo').click();
+  assert.equal(f.el('judge-guide').hidden, false); assert.equal(f.w.document.querySelector('[data-demo-step="2"]').className, 'active');
+  f.el('scan').click();
+  assert.equal(f.el('receipt-detected').textContent, '4'); assert.equal(f.el('receipt-masked').textContent, '4'); assert.equal(f.el('receipt-originals').textContent, '0');
+  assert.equal(f.el('receipt-status').textContent, 'Awaiting your review'); assert.equal(f.w.document.querySelector('[data-demo-step="3"]').className, 'active');
+  f.approve(); assert.equal(f.el('receipt-status').textContent, 'Approved by user'); assert.equal(f.w.document.querySelector('[data-demo-step="4"]').className, 'active');
+  f.el('demo-reply').click(); assert.equal(f.w.document.querySelector('[data-demo-step="5"]').className, 'active');
+  f.el('restore').click(); assert.equal(f.w.document.querySelectorAll('.demo-steps .done').length, 5); assert.match(f.el('judge-note').textContent, /Demo complete/); f.close();
+});
+test('patient scenario uses custom terms to protect health context and address', () => {
+  const f = setup(); f.el('sample-health').click(); assert.match(f.el('custom').value, /chronic migraine/); f.el('scan').click();
+  for (const value of ['Rohan Mehta', 'chronic migraine', '42 Lotus Park, Pune', 'rohan.demo@patient.example', '+91 91234 56789']) assert.ok(!f.el('masked').textContent.includes(value));
+  assert.ok(Number(f.el('finding-count').textContent) >= 5); f.close();
 });
 test('HTML and script-shaped text is rendered literally in preview and replies', () => {
   const f = setup(); f.input('prompt', '<img src=x onerror=alert(1)> a@example.com'); f.el('scan').click();

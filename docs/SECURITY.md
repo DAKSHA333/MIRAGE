@@ -1,4 +1,4 @@
-# Security model — MIRAGE 1.1 RC
+# Security model — MIRAGE 1.2 RC
 
 ## Protected boundary
 
@@ -9,6 +9,7 @@ Restored values are displayed only in MIRAGE. No vault, original prompt or passp
 ## Controls implemented
 
 - Review gate, disabled copy/insertion on detected secrets and on stale scans.
+- Local privacy receipts report known matches and known originals in the preview without claiming comprehensive detection.
 - Conservative overlap unions, bounded inputs/matches, selected Unicode normalization and suspicious control rejection.
 - 128-bit scan identifiers and exact per-scan restoration. Unknown tokens remain unchanged.
 - Plain-text DOM rendering to prevent HTML execution from prompts and replies.

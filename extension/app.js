@@ -7,12 +7,29 @@ const vault = new SessionVault();
 const isExtension = location.protocol === 'chrome-extension:' && Boolean(globalThis.chrome?.runtime?.id);
 const allowedProviderOrigins = new Set(['https://chatgpt.com', 'https://gemini.google.com']);
 let result = null, restoredText = null, target = null, busy = false, generation = 0;
+let demoMode = false, receiptStatus = 'Awaiting your review';
 let toastTimer, backupMode = 'save', backupFile = null;
 
 function toast(message) { $('toast').textContent = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').textContent = ''; }, 5000); }
 function fail(message) { $('error-banner').textContent = message; $('error-banner').hidden = false; $('announcement').textContent = message; }
 function clearError() { $('error-banner').hidden = true; $('error-banner').textContent = ''; }
 function invalidateReply() { restoredText = null; $('copy-restored').disabled = true; $('restored').textContent = 'Your restored reply will appear here.'; $('restore-note').textContent = 'Keep tokens unchanged in the AI reply.'; }
+function setJudgeStage(stage, note) {
+  if (!demoMode) return;
+  $('judge-guide').hidden = false; $('judge-note').textContent = note;
+  for (const item of document.querySelectorAll('[data-demo-step]')) {
+    const number = Number(item.dataset.demoStep); item.className = number < stage ? 'done' : number === stage ? 'active' : '';
+  }
+}
+function renderReceipt(status = receiptStatus) {
+  if (!result) { $('privacy-receipt').hidden = true; return; }
+  receiptStatus = status; $('privacy-receipt').hidden = false;
+  $('receipt-detected').textContent = String(result.findings.length);
+  $('receipt-masked').textContent = result.blocked ? '—' : String(result.vault.size);
+  $('receipt-originals').textContent = result.blocked ? 'Not shared' : String([...result.vault.values()].filter(value => result.masked.includes(value)).length);
+  $('receipt-status').textContent = status;
+  $('privacy-receipt').classList.toggle('blocked', result.blocked);
+}
 function updateActions() {
   const approved = result && !result.blocked && $('reviewed').checked;
   $('copy').disabled = !approved || busy;
@@ -37,6 +54,7 @@ function updateSessions(selected = $('session-select').value) {
 }
 function invalidateScan() {
   result?.vault.clear(); result = null;
+  receiptStatus = 'Awaiting your review'; $('privacy-receipt').hidden = true;
   $('reviewed').checked = false; $('reviewed').disabled = true;
   $('empty-preview').hidden = false; $('masked').hidden = true; $('masked').replaceChildren(); $('blocked-view').hidden = true;
   $('result-badge').textContent = 'Awaiting scan'; $('result-badge').className = 'badge';
@@ -49,7 +67,7 @@ function invalidateScan() {
 }
 function closeBackup() { generation++; $('vault-dialog').close(); $('passphrase').value = ''; $('confirm-passphrase').value = ''; backupFile = null; $('backup-file').value = ''; busy = false; $('submit-vault').disabled = false; updateActions(); }
 function wipe(message = '') {
-  generation++; vault.clear(); prompt.value = ''; $('custom').value = ''; $('reply').value = '';
+  generation++; vault.clear(); prompt.value = ''; $('custom').value = ''; $('reply').value = ''; demoMode = false; $('judge-guide').hidden = true;
   closeBackup(); $('clear-dialog').close(); clearError(); invalidateScan(); invalidateReply(); updateSessions(); updateConnection();
   if (message) toast(message);
 }
@@ -93,23 +111,28 @@ function scanPrompt() {
   $('scan-summary').textContent = result.blocked ? 'Remove secrets and scan again' : `${result.vault.size} unique details masked · Review before sharing`;
   if (result.blocked) { $('blocked-view').hidden = false; $('preview-note').textContent = 'Copy and insertion are blocked. Remove the secret, then scan again.'; }
   else { $('masked').hidden = false; renderMasked(result.masked); $('reviewed').disabled = false; }
+  renderReceipt(result.blocked ? 'Sharing blocked' : 'Awaiting your review');
+  setJudgeStage(result.blocked ? 2 : 3, result.blocked ? 'MIRAGE found a credential and stopped the workflow before sharing.' : 'The scan ran locally. Review the masked preview and approve it.');
   $('announcement').textContent = result.blocked ? 'Secret detected. Copy and insertion blocked.' : `Scan complete. ${result.findings.length} matches. Review the preview and check the approval box.`;
   invalidateReply(); updateActions();
 }
 prompt.addEventListener('input', () => { ensureActive(); clearError(); invalidateScan(); });
 $('custom').addEventListener('input', () => { ensureActive(); clearError(); invalidateScan(); });
-$('reviewed').addEventListener('change', () => { if (ensureActive()) { $('result-badge').textContent = $('reviewed').checked ? 'Reviewed by you' : 'Review required'; updateActions(); } });
+$('reviewed').addEventListener('change', () => { if (ensureActive()) { const approved = $('reviewed').checked; $('result-badge').textContent = approved ? 'Reviewed by you' : 'Review required'; renderReceipt(approved ? 'Approved by user' : 'Awaiting your review'); setJudgeStage(approved ? 4 : 3, approved ? 'Only the masked preview is now eligible to leave MIRAGE. Insert it or copy it manually.' : 'Review the complete preview before sharing.'); updateActions(); } });
 $('scan').addEventListener('click', scanPrompt);
-$('sample-personal').addEventListener('click', () => {
-  ensureActive(); prompt.value = "Hi, I'm Ananya Deshmukh, and I recently joined Nexora Labs as a software engineering intern. HR asked me to confirm my PAN DEMOX1234A, phone number +91 98765 43210, and email address ananya.demo@student.example. Please draft a professional reply confirming these details and asking whether my onboarding documents are complete.";
-  $('custom').value = ''; clearError(); invalidateScan(); prompt.focus(); toast('Synthetic onboarding scenario loaded. Scan to see the mask.');
-});
-$('sample-secret').addEventListener('click', () => {
-  ensureActive(); prompt.value = 'I am configuring our demo attendance API before tomorrow’s review, but authentication keeps failing. Here is the relevant .env snippet:\nAPI_KEY=sk-demo-1234567890abcdefghijklmnop\nDB_PASSWORD=CampusDemo!2026\nCan you find the configuration problem?';
-  $('custom').value = ''; clearError(); invalidateScan(); prompt.focus(); toast('Synthetic credential-leak scenario loaded.');
-});
-async function copyText(text) { try { await navigator.clipboard.writeText(text); toast('Copied to clipboard.'); } catch { fail('Clipboard access failed. Select the visible preview and copy it manually.'); } }
-$('copy').addEventListener('click', () => { if (ensureActive() && result && !result.blocked && $('reviewed').checked) copyText(result.masked); });
+function loadScenario(text, privateTerms, message) {
+  if (!ensureActive()) return; prompt.value = text; $('custom').value = privateTerms; clearError(); invalidateScan(); prompt.focus(); toast(message);
+}
+function loadOnboardingScenario() {
+  loadScenario("Hi, I'm Ananya Deshmukh, and I recently joined Nexora Labs as a software engineering intern. HR asked me to confirm my PAN DEMOX1234A, phone number +91 98765 43210, and email address ananya.demo@student.example. Please draft a professional reply confirming these details and asking whether my onboarding documents are complete.", '', 'Synthetic onboarding scenario loaded. Scan to see the mask.');
+}
+$('sample-personal').addEventListener('click', loadOnboardingScenario);
+$('sample-health').addEventListener('click', () => loadScenario("Hi, I'm Rohan Mehta. Please draft a follow-up note for my clinic after a chronic migraine consultation. Ask them to send the care plan to rohan.demo@patient.example or call +91 91234 56789. My home address is 42 Lotus Park, Pune.", 'chronic migraine\n42 Lotus Park, Pune', 'Synthetic patient scenario loaded with two custom private terms.'));
+$('sample-secret').addEventListener('click', () => loadScenario('I am configuring our demo attendance API before tomorrow’s review, but authentication keeps failing. Here is the relevant .env snippet:\nAPI_KEY=sk-demo-1234567890abcdefghijklmnop\nDB_PASSWORD=CampusDemo!2026\nCan you find the configuration problem?', '', 'Synthetic credential-leak scenario loaded.'));
+$('start-demo').addEventListener('click', () => { demoMode = true; loadOnboardingScenario(); setJudgeStage(2, 'A believable synthetic onboarding request is ready. Click Scan & mask.'); $('judge-guide').scrollIntoView?.({ block: 'start' }); });
+$('exit-demo').addEventListener('click', () => { demoMode = false; $('judge-guide').hidden = true; toast('Judge mode closed. Your current session remains available.'); });
+async function copyText(text, onSuccess) { try { await navigator.clipboard.writeText(text); onSuccess?.(); toast('Copied to clipboard.'); } catch { fail('Clipboard access failed. Select the visible preview and copy it manually.'); } }
+$('copy').addEventListener('click', () => { if (ensureActive() && result && !result.blocked && $('reviewed').checked) copyText(result.masked, () => { renderReceipt('Masked preview copied'); setJudgeStage(5, 'The safe preview is ready for an AI. Use a real reply or Try a sample reply below.'); }); });
 $('reply').addEventListener('input', () => { ensureActive(); invalidateReply(); });
 $('session-select').addEventListener('change', () => { ensureActive(); invalidateReply(); updateActions(); });
 $('demo-reply').addEventListener('click', () => {
@@ -121,7 +144,7 @@ $('demo-reply').addEventListener('click', () => {
     $('reply').value = person && pan && phone && email
       ? `Local demo response — no AI call was made.\n\nSubject: Confirmation of onboarding details\n\nHello HR Team,\n\nThank you for the update. I’m writing to confirm my onboarding details:\n\nName: ${person}\nPAN: ${pan}\nPhone: ${phone}\nEmail: ${email}\n\nPlease let me know whether my onboarding documents are complete or if you need anything else from me.\n\nBest regards,\n${person}`
       : `Local demo response — no AI call was made.\n\nHere are the protected details referenced in this draft:\n${tokens.length ? tokens.join('\n') : 'No tokens in this scan.'}\n\nPlease review the response before using it.`;
-    invalidateReply(); toast('Realistic local reply loaded. Click Restore details.');
+    invalidateReply(); setJudgeStage(5, 'This local response preserves MIRAGE tokens. Click Restore details to complete the privacy loop.'); toast('Realistic local reply loaded. Click Restore details.');
   }
   catch (error) { fail(error.message); }
 });
@@ -133,6 +156,7 @@ $('restore').addEventListener('click', () => {
     restoredText = restored.text; $('restored').textContent = restored.text; $('copy-restored').disabled = false;
     $('restore-note').textContent = restored.unknown.length ? `${restored.unknown.length} unknown token(s) remain. Choose the matching scan. Tokens changed by the AI cannot be restored.` : 'Restored inside MIRAGE. Copying this reply includes the original details.';
     $('announcement').textContent = $('restore-note').textContent;
+    setJudgeStage(6, 'Demo complete: sensitive values stayed local, the AI-facing text used tokens, and the reply was restored inside MIRAGE.');
   } catch (error) { fail(error.message); }
 });
 $('copy-restored').addEventListener('click', () => { if (ensureActive() && restoredText !== null) copyText(restoredText); });
@@ -174,11 +198,11 @@ $('provider-choice').addEventListener('change', clearError);
 $('insert').addEventListener('click', () => {
   if (!result || result.blocked || !$('reviewed').checked || !target) return;
   const approvedText = result.masked;
-  runBridge(async epoch => { await bridge('insert', approvedText); if (epoch === generation) toast('Masked draft inserted. Check it in the chatbot, then send when ready.'); });
+  runBridge(async epoch => { await bridge('insert', approvedText); if (epoch === generation) { renderReceipt('Masked preview inserted'); setJudgeStage(5, 'The masked draft is in the chatbot. Send it yourself, then fetch the reply or use the local sample.'); toast('Masked draft inserted. Check it in the chatbot, then send when ready.'); } });
 });
 $('read-reply').addEventListener('click', () => {
   const priorReply = $('reply').value;
-  runBridge(async epoch => { const r = await bridge('read'); if (epoch !== generation) return; if ($('reply').value !== priorReply) { fail('Your reply changed while reading the chat. Fetch again when ready.'); return; } $('reply').value = r.text; invalidateReply(); toast('Latest visible AI reply loaded. Choose its scan, then restore.'); });
+  runBridge(async epoch => { const r = await bridge('read'); if (epoch !== generation) return; if ($('reply').value !== priorReply) { fail('Your reply changed while reading the chat. Fetch again when ready.'); return; } $('reply').value = r.text; invalidateReply(); setJudgeStage(5, 'The tokenized AI reply is back inside MIRAGE. Click Restore details.'); toast('Latest visible AI reply loaded. Choose its scan, then restore.'); });
 });
 
 function openBackup(mode, file = null) {

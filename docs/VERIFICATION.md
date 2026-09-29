@@ -1,8 +1,8 @@
-# Verification — MIRAGE 1.1.2 RC
+# Verification — MIRAGE 1.2.0 RC
 
 ## Automated results
 
-- `npm test`: **61 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, realistic demo data, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
+- `npm test`: **63 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, guided judge mode, privacy receipts, realistic demo data, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
 - One regression test additionally runs 250 deterministic round-trip combinations. These are correctness cases, not a representative accuracy benchmark.
 - Backup tests cover AES-GCM round trip, wrong passphrase, tampering, bounded parameters/schema, import conflicts, session expiry and cancellation.
 - DOM-based UI test completes encrypted download creation, clear, backup unlock, and restoration of an earlier reply.
@@ -12,16 +12,16 @@
 
 ## Browser evidence
 
-Before the browser connection became unavailable, the in-app browser showed the updated page and completed the keyboard-driven sample scan, review approval and local reply restoration. A 390px viewport had 375px client and scroll widths, with no horizontal overflow. The encrypted-backup dialog opened and showed its passphrase controls. No errors appeared in the queried browser console.
+Headless Chrome rendered the 1.2 workspace at desktop and mobile widths. At an emulated 390px viewport, the document client and scroll widths were both 375px, with no horizontal overflow. A live DOM check started Judge Mode, scanned the onboarding scenario, displayed its privacy receipt, and reported four matches with zero known originals in the preview. Automated DOM tests complete approval, local sample response and restoration.
 
 Mouse automation was unreliable in that browser session and was not conclusively resolved. Keyboard interactions worked. Full mouse/touch verification remains open. Later verification used automated DOM fixtures, not a replacement live-browser claim.
 
 ## Explicitly not verified
 
-- Full Chrome service-worker/side-panel lifecycle after the 1.1.1 permission-flow update. The user supplied evidence that 1.1.0 opened as a side panel, and that its active-tab-only connection failed.
+- Full Chrome service-worker/side-panel lifecycle for 1.2.0. The user supplied evidence that 1.1.1 connected successfully to ChatGPT after the permission-flow fix.
 - Signed-in live ChatGPT/Gemini adapters, provider transmissions, or streaming reply behavior. Adapters were tested against synthetic fixtures only.
 - Browser-native backup file download/upload completion; DOM tests verified app behavior and encryption.
 - Independent security review, broad detection accuracy, store approval or production rollout.
-- GitHub CI execution. A workflow file exists, but no repository was published or remote run performed.
+- GitHub CI execution for this commit has not been independently verified.
 
 The release is suitable for controlled evaluation. See RELEASE-CHECKLIST.md for public-release gates. Do not equate this evidence with 100% secret detection or 95% personal-data detection.

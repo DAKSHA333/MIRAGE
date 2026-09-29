@@ -13,6 +13,6 @@ await copyFile(new URL('dist/release-manifest.json', root), new URL('downloads/r
 let html = await readFile(new URL('index.html', output), 'utf8');
 html = html.replace('Local workspace</strong>', 'Browser workspace</strong>');
 html = html.replace('Copy and paste works here. Install the Chrome extension for the private side panel and chat insertion.', 'Text is processed in your browser. Use the Chrome extension for the private side panel and chat insertion.');
-html = html.replace('<section class="work-grid"', `<p class="mode-note"><a href="downloads/${manifest.release}" download>Download the Chrome extension (1.1 RC)</a> · Extract the ZIP, then Load unpacked in Chrome’s extension settings.</p><section class="work-grid"`);
+html = html.replace('<section class="work-grid"', `<p class="mode-note"><a href="downloads/${manifest.release}" download>Download the Chrome extension (${manifest.version} RC)</a> · Extract the ZIP, then Load unpacked in Chrome’s extension settings.</p><section class="work-grid"`);
 await writeFile(new URL('index.html', output), html);
 console.log('Static workspace and extension download built in web-dist/.');

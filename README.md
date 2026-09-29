@@ -1,4 +1,4 @@
-# MIRAGE 1.1 — Release candidate
+# MIRAGE 1.2 — Release candidate
 
 A private AI drafting workspace for Team Nexora. Write in MIRAGE, mask locally, review the preview, and share only that preview. Restore AI replies inside MIRAGE.
 
@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.1.2-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.2.0-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
 5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
 6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
@@ -35,6 +35,12 @@ The latest ZIP has the manifest at its root. `MIRAGE-v1-extension.zip` is the ol
 6. Use **Get latest reply**, or paste the reply. Choose its scan and click **Restore details**. Originals appear only in MIRAGE.
 
 For a demonstration without an AI account, use **Intern onboarding**, **Scan & mask**, **Try a sample reply**, and **Restore details**. The scenario uses believable but synthetic identity data, and the formatted sample reply is explicitly local text rather than an AI response.
+
+## Judge mode and privacy receipts
+
+**Start 90-second demo** loads the synthetic intern-onboarding scenario and guides a presenter through local scanning, preview review, masked sharing and local restoration. It never approves, inserts or sends on the presenter’s behalf.
+
+Every completed scan produces a local privacy receipt with the number of matches, unique masked values, known originals remaining in the preview and current sharing status. The receipt describes MIRAGE’s deterministic checks; it is not a claim that unknown personal data cannot be present. The patient follow-up example also demonstrates user-supplied protection for a health term and address.
 
 ## Session vault
 
