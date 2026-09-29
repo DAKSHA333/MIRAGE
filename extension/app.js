@@ -28,6 +28,7 @@ function renderReceipt(status = receiptStatus) {
   $('receipt-masked').textContent = result.blocked ? '—' : String(result.vault.size);
   $('receipt-originals').textContent = result.blocked ? 'Not shared' : String([...result.vault.values()].filter(value => result.masked.includes(value)).length);
   $('receipt-status').textContent = status;
+  $('receipt-categories').textContent = [...new Set(result.findings.map(finding => finding.label))].join(' · ') || 'None detected';
   $('privacy-receipt').classList.toggle('blocked', result.blocked);
 }
 function updateActions() {
@@ -124,10 +125,10 @@ function loadScenario(text, privateTerms, message) {
   if (!ensureActive()) return; prompt.value = text; $('custom').value = privateTerms; clearError(); invalidateScan(); prompt.focus(); toast(message);
 }
 function loadOnboardingScenario() {
-  loadScenario("Hi, I'm Ananya Deshmukh, and I recently joined Nexora Labs as a software engineering intern. HR asked me to confirm my PAN DEMOX1234A, phone number +91 98765 43210, and email address ananya.demo@student.example. Please draft a professional reply confirming these details and asking whether my onboarding documents are complete.", '', 'Synthetic onboarding scenario loaded. Scan to see the mask.');
+  loadScenario("Hi, I'm Ananya Deshmukh, and I recently joined Nexora Labs as a software engineering intern. HR asked me to confirm my employee ID NX-INT-2041, DOB 14/08/2004, PAN DEMOX1234A, phone number +91 98765 43210, and email address ananya.demo@student.example. Please draft a professional reply confirming these details and asking whether my onboarding documents are complete.", '', 'Synthetic onboarding scenario loaded. Scan to see the mask.');
 }
 $('sample-personal').addEventListener('click', loadOnboardingScenario);
-$('sample-health').addEventListener('click', () => loadScenario("Hi, I'm Rohan Mehta. Please draft a follow-up note for my clinic after a chronic migraine consultation. Ask them to send the care plan to rohan.demo@patient.example or call +91 91234 56789. My home address is 42 Lotus Park, Pune.", 'chronic migraine\n42 Lotus Park, Pune', 'Synthetic patient scenario loaded with two custom private terms.'));
+$('sample-health').addEventListener('click', () => loadScenario("Hi, I'm Rohan Mehta. My patient ID is CLINIC-4821. Please draft a follow-up note after a chronic migraine consultation. Ask the clinic to send the care plan to rohan.demo@patient.example or call +91 91234 56789. My home address is 42 Lotus Park, Pune.", 'chronic migraine', 'Synthetic patient scenario loaded with one custom health term.'));
 $('sample-secret').addEventListener('click', () => loadScenario('I am configuring our demo attendance API before tomorrow’s review, but authentication keeps failing. Here is the relevant .env snippet:\nAPI_KEY=sk-demo-1234567890abcdefghijklmnop\nDB_PASSWORD=CampusDemo!2026\nCan you find the configuration problem?', '', 'Synthetic credential-leak scenario loaded.'));
 $('start-demo').addEventListener('click', () => { demoMode = true; loadOnboardingScenario(); setJudgeStage(2, 'A believable synthetic onboarding request is ready. Click Scan & mask.'); $('judge-guide').scrollIntoView?.({ block: 'start' }); });
 $('exit-demo').addEventListener('click', () => { demoMode = false; $('judge-guide').hidden = true; toast('Judge mode closed. Your current session remains available.'); });
@@ -140,9 +141,9 @@ $('demo-reply').addEventListener('click', () => {
   try {
     const tokens = [...vault.get($('session-select').value).keys()];
     const token = type => tokens.find(value => value.includes(`_${type}_`));
-    const person = token('PERSON'), pan = token('PAN'), phone = token('PHONE'), email = token('EMAIL');
-    $('reply').value = person && pan && phone && email
-      ? `Local demo response — no AI call was made.\n\nSubject: Confirmation of onboarding details\n\nHello HR Team,\n\nThank you for the update. I’m writing to confirm my onboarding details:\n\nName: ${person}\nPAN: ${pan}\nPhone: ${phone}\nEmail: ${email}\n\nPlease let me know whether my onboarding documents are complete or if you need anything else from me.\n\nBest regards,\n${person}`
+    const person = token('PERSON'), employeeId = token('RECORDID'), dob = token('DOB'), pan = token('PAN'), phone = token('PHONE'), email = token('EMAIL');
+    $('reply').value = person && employeeId && dob && pan && phone && email
+      ? `Local demo response — no AI call was made.\n\nSubject: Confirmation of onboarding details\n\nHello HR Team,\n\nThank you for the update. I’m writing to confirm my onboarding details:\n\nName: ${person}\nEmployee ID: ${employeeId}\nDate of birth: ${dob}\nPAN: ${pan}\nPhone: ${phone}\nEmail: ${email}\n\nPlease let me know whether my onboarding documents are complete or if you need anything else from me.\n\nBest regards,\n${person}`
       : `Local demo response — no AI call was made.\n\nHere are the protected details referenced in this draft:\n${tokens.length ? tokens.join('\n') : 'No tokens in this scan.'}\n\nPlease review the response before using it.`;
     invalidateReply(); setJudgeStage(5, 'This local response preserves MIRAGE tokens. Click Restore details to complete the privacy loop.'); toast('Realistic local reply loaded. Click Restore details.');
   }

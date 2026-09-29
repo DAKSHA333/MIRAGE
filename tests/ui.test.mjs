@@ -53,27 +53,28 @@ test('editing a new draft retains the earlier scan for reply restoration', () =>
 test('onboarding demo masks realistic fields and restores a formatted local reply', () => {
   const f = setup(); f.el('sample-personal').click();
   assert.match(f.el('prompt').value, /software engineering intern/); f.el('scan').click();
-  assert.equal(f.el('finding-count').textContent, '4');
-  for (const value of ['Ananya Deshmukh', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(!f.el('masked').textContent.includes(value));
+  assert.equal(f.el('finding-count').textContent, '6');
+  for (const value of ['Ananya Deshmukh', 'NX-INT-2041', '14/08/2004', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(!f.el('masked').textContent.includes(value));
   f.el('demo-reply').click(); assert.match(f.el('reply').value, /Subject: Confirmation of onboarding details/); assert.ok(!f.el('reply').value.includes('Ananya Deshmukh'));
   f.el('restore').click();
-  for (const value of ['Ananya Deshmukh', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(f.el('restored').textContent.includes(value));
+  for (const value of ['Ananya Deshmukh', 'NX-INT-2041', '14/08/2004', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(f.el('restored').textContent.includes(value));
   f.close();
 });
 test('judge mode guides the complete local privacy loop and produces a receipt', () => {
   const f = setup(); f.el('start-demo').click();
   assert.equal(f.el('judge-guide').hidden, false); assert.equal(f.w.document.querySelector('[data-demo-step="2"]').className, 'active');
   f.el('scan').click();
-  assert.equal(f.el('receipt-detected').textContent, '4'); assert.equal(f.el('receipt-masked').textContent, '4'); assert.equal(f.el('receipt-originals').textContent, '0');
+  assert.equal(f.el('receipt-detected').textContent, '6'); assert.equal(f.el('receipt-masked').textContent, '6'); assert.equal(f.el('receipt-originals').textContent, '0');
+  assert.match(f.el('receipt-categories').textContent, /Institutional ID/); assert.match(f.el('receipt-categories').textContent, /Date of birth/);
   assert.equal(f.el('receipt-status').textContent, 'Awaiting your review'); assert.equal(f.w.document.querySelector('[data-demo-step="3"]').className, 'active');
   f.approve(); assert.equal(f.el('receipt-status').textContent, 'Approved by user'); assert.equal(f.w.document.querySelector('[data-demo-step="4"]').className, 'active');
   f.el('demo-reply').click(); assert.equal(f.w.document.querySelector('[data-demo-step="5"]').className, 'active');
   f.el('restore').click(); assert.equal(f.w.document.querySelectorAll('.demo-steps .done').length, 5); assert.match(f.el('judge-note').textContent, /Demo complete/); f.close();
 });
-test('patient scenario uses custom terms to protect health context and address', () => {
+test('patient scenario combines smart fields with a custom health term', () => {
   const f = setup(); f.el('sample-health').click(); assert.match(f.el('custom').value, /chronic migraine/); f.el('scan').click();
-  for (const value of ['Rohan Mehta', 'chronic migraine', '42 Lotus Park, Pune', 'rohan.demo@patient.example', '+91 91234 56789']) assert.ok(!f.el('masked').textContent.includes(value));
-  assert.ok(Number(f.el('finding-count').textContent) >= 5); f.close();
+  for (const value of ['Rohan Mehta', 'CLINIC-4821', 'chronic migraine', '42 Lotus Park, Pune', 'rohan.demo@patient.example', '+91 91234 56789']) assert.ok(!f.el('masked').textContent.includes(value));
+  assert.ok(Number(f.el('finding-count').textContent) >= 6); f.close();
 });
 test('HTML and script-shaped text is rendered literally in preview and replies', () => {
   const f = setup(); f.input('prompt', '<img src=x onerror=alert(1)> a@example.com'); f.el('scan').click();

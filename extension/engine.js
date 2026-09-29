@@ -14,7 +14,13 @@ export function luhn(value) {
   return sum % 10 === 0;
 }
 const reserved = /\[MG_[A-Z0-9]+_[A-Z]+_\d+\]/g;
-const labels = { PERSON: 'Name', PAN: 'PAN', AADHAAR: 'Aadhaar', UPI: 'UPI ID', IFSC: 'IFSC', EMAIL: 'Email', PHONE: 'Phone', CUSTOM: 'Your private term', PRIVATE: 'Overlapping private details', SECRET: 'Secret', CARD: 'Payment card' };
+const labels = { PERSON: 'Name', PAN: 'PAN', AADHAAR: 'Aadhaar', UPI: 'UPI ID', IFSC: 'IFSC', EMAIL: 'Email', PHONE: 'Phone', DOB: 'Date of birth', PASSPORT: 'Passport', BANKACCOUNT: 'Bank account', RECORDID: 'Institutional ID', ADDRESS: 'Address', CUSTOM: 'Your private term', PRIVATE: 'Overlapping private details', SECRET: 'Secret', CARD: 'Payment card' };
+function validDate(value) {
+  const parts = value.split(/[-/.]/).map(Number); let year, month, day;
+  if (String(parts[0]).length === 4) [year, month, day] = parts; else [day, month, year] = parts;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
 // Canonicalize detection only; all reported offsets and restored values use the original.
 function canonicalize(original) {
   let text = ''; const offsets = []; let index = 0;
@@ -61,12 +67,17 @@ export function scan(original, customTerms = [], sessionId = 'V1') {
   match('AADHAAR', /(?<!\d)[2-9]\d{3}[ -]?\d{4}[ -]?\d{4}(?!\d)/g, 'Aadhaar-shaped number', 50);
   match('PAN', /\b[A-Z]{5}\d{4}[A-Z]\b/gi, 'Format match; identity not verified', 50);
   match('IFSC', /\b[A-Z]{4}0[A-Z0-9]{6}\b/gi, 'Format match; bank not verified', 50);
+  match('DOB', /\b(?:date of birth|dob|born on)\s*(?::|=|is)?\s*((?:(?:0?[1-9]|[12]\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.](?:19|20)\d{2})|(?:(?:19|20)\d{2}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])))\b/gi, 'Labeled date of birth', 45, validDate, 1);
+  match('PASSPORT', /\b(?:passport(?:\s+(?:number|no\.?))?)\s*(?::|=|is)?\s*([A-Z][0-9]{7})\b/gi, 'Labeled Indian passport format; identity not verified', 45, () => true, 1);
+  match('BANKACCOUNT', /\b(?:(?:bank\s+)?account\s+(?:number|no\.?)|a\/c\s+(?:number|no\.?))\s*(?::|=|is)?\s*(\d[\d -]{7,22}\d)\b/gi, 'Labeled bank account; bank not verified', 45, value => { const n = value.replace(/\D/g, '').length; return n >= 9 && n <= 18; }, 1);
+  match('RECORDID', /\b(?:student|employee|patient|application|registration|roll)\s*(?:id|number|no\.?)\s*(?::|=|is)?\s*([A-Z0-9][A-Z0-9/-]{3,23})\b/gi, 'Labeled institutional identifier', 45, value => /\d/.test(value), 1);
   match('EMAIL', /\b[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9-]+(?:\.[A-Z0-9-]+)+\b/gi, 'Email format', 40);
   match('UPI', /\b[A-Z0-9][A-Z0-9._-]{1,255}@[A-Z][A-Z0-9]{1,63}\b/gi, 'UPI-shaped ID; handle not verified', 30);
   match('PHONE', /(?<![\w\d])(?:\+91[ -]?)?[6-9]\d{4}[ -]?\d{5}(?!\d)/g, 'Indian mobile format', 20);
   match('PHONE', /(?<![\w\d])(?:\+91[ -]?)?[6-9]\d{2}[ -]\d{3}[ -]\d{4}(?!\d)/g, 'Indian mobile format', 20);
   match('PHONE', /(?<![\w\d])\+[1-9]\d{0,2}(?:[ ().-]*\d){7,13}(?!\d)/g, 'International phone format', 25, value => { const n = value.replace(/\D/g,'').length; return n >= 10 && n <= 15; });
   match('PHONE', /\b(?:phone|mobile|tel(?:ephone)?)\s*(?::|=|is)?\s*(\d(?:[ ().-]*\d){9,14})(?!\d)/gi, 'Labeled phone number', 25, () => true, 1);
+  match('ADDRESS', /\b(?:(?:home|residential|mailing|postal|current)\s+address|address)\s*(?::|=|\bis\b)\s*([^\n.!?;]{8,160})(?=[.!?;]|\n|$)/gi, 'Labeled address; heuristic', 18, value => /\d/.test(value) && /\p{L}/u.test(value), 1);
   match('PERSON', /\b(?:[Ii] am|[Ii]['’]m|[Mm]y name is|[Nn]ame\s*:)\s+(\p{Lu}[\p{L}\p{M}]*(?:['’-][\p{L}\p{M}]+)?(?:[ ]\p{Lu}[\p{L}\p{M}]*(?:['’-][\p{L}\p{M}]+)?){0,3})(?!\p{L})/gu, 'Name after an introduction; heuristic', 15, () => true, 1);
   const repeatedNames = [...new Set(candidates.filter(x => x.type === 'PERSON').map(x => x.value))];
   for (const [term, type] of customTerms.map(x => x.trim()).filter(Boolean).map(x => [x, 'CUSTOM']).concat(repeatedNames.map(x => [x, 'PERSON']))) {

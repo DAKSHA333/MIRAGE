@@ -1,4 +1,4 @@
-# MIRAGE 1.2 — Release candidate
+# MIRAGE 1.3 — Release candidate
 
 A private AI drafting workspace for Team Nexora. Write in MIRAGE, mask locally, review the preview, and share only that preview. Restore AI replies inside MIRAGE.
 
@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.2.0-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.3.0-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
 5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
 6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
@@ -53,7 +53,7 @@ Every completed scan produces a local privacy receipt with the number of matches
 
 ## Detection
 
-Local rules cover PAN, Aadhaar-shaped numbers, UPI, IFSC, email, supported Indian/international phone formats, introductory names and their repeated occurrences, and literal custom terms. Aadhaar has a Verhoeff check; PAN, UPI and IFSC are format checks, not identity verification.
+Local rules cover PAN, Aadhaar-shaped numbers, UPI, IFSC, email, supported Indian/international phone formats, introductory names and their repeated occurrences, and literal custom terms. Label-aware rules also protect dates of birth, Indian passport formats, bank accounts, institutional IDs, and street addresses. Aadhaar has a Verhoeff check; the other structured fields use conservative labels or format checks rather than identity verification.
 
 Credential rules cover common API keys, labeled passwords and tokens (including JSON and environment-variable syntax), OTPs, private keys, JWT-shaped values, URL credentials and payment credentials. Overlapping matches are merged so a short custom term cannot expose the rest of an identifier. Unicode compatibility forms and selected numeral scripts are scanned with original offsets preserved. Suspicious invisible/directional controls stop the scan.
 

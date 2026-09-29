@@ -18,7 +18,7 @@ function validate(payload) {
     for (const entry of session.entries) {
       if (!Array.isArray(entry) || entry.length !== 2) throw new Error('Invalid token entry.');
       const [token, value] = entry;
-      if (typeof token !== 'string' || !new RegExp(`^\\[MG_${session.id}_(?:PERSON|PAN|AADHAAR|UPI|IFSC|EMAIL|PHONE|CUSTOM|PRIVATE)_\\d{1,4}\\]$`).test(token) || tokens.has(token) || typeof value !== 'string' || !value.length || value.length > 30000) throw new Error('Invalid token entry.');
+      if (typeof token !== 'string' || !new RegExp(`^\\[MG_${session.id}_(?:PERSON|PAN|AADHAAR|UPI|IFSC|EMAIL|PHONE|DOB|PASSPORT|BANKACCOUNT|RECORDID|ADDRESS|CUSTOM|PRIVATE)_\\d{1,4}\\]$`).test(token) || tokens.has(token) || typeof value !== 'string' || !value.length || value.length > 30000) throw new Error('Invalid token entry.');
       total += value.length; tokens.add(token);
       if (total > 500000) throw new Error('Backup exceeds the private-data limit.');
     }

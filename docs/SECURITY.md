@@ -1,4 +1,4 @@
-# Security model — MIRAGE 1.2 RC
+# Security model — MIRAGE 1.3 RC
 
 ## Protected boundary
 
@@ -11,6 +11,7 @@ Restored values are displayed only in MIRAGE. No vault, original prompt or passp
 - Review gate, disabled copy/insertion on detected secrets and on stale scans.
 - Local privacy receipts report known matches and known originals in the preview without claiming comprehensive detection.
 - Conservative overlap unions, bounded inputs/matches, selected Unicode normalization and suspicious control rejection.
+- Label-aware detection for birth dates, passports, bank accounts, institutional IDs and addresses to reduce false positives from unlabeled prose.
 - 128-bit scan identifiers and exact per-scan restoration. Unknown tokens remain unchanged.
 - Plain-text DOM rendering to prevent HTML execution from prompts and replies.
 - Fifteen-minute in-memory expiry and session clearing on page lifecycle transitions.

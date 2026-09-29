@@ -39,6 +39,17 @@ test('Indian formats mask and conservatively include invalid Aadhaar checksums',
   assert.equal(verhoeff('234567890123'), false);
   assert.match(r.findings[3].note, /failed/);
 });
+test('labeled identity and account fields are masked and restore exactly', () => {
+  const original = 'DOB: 14/08/2004. Passport number: Z1234567. Employee ID: NX-2041. Bank account number is 00123456789. Home address is 42 Lotus Park, Pune.';
+  const r = scan(original, [], 'LABELS');
+  assert.deepEqual(r.findings.map(x => x.type), ['DOB', 'PASSPORT', 'RECORDID', 'BANKACCOUNT', 'ADDRESS']);
+  for (const value of ['14/08/2004', 'Z1234567', 'NX-2041', '00123456789', '42 Lotus Park, Pune']) assert.ok(!r.masked.includes(value));
+  assert.equal(restore(r.masked, r.vault).text, original);
+});
+test('label-aware rules avoid unlabeled codes and reject impossible birth dates', () => {
+  const r = scan('The project date is 14/08/2004 and its internal code is NX-2041. DOB: 31/02/2004.');
+  assert.equal(r.findings.length, 0); assert.equal(r.masked, 'The project date is 14/08/2004 and its internal code is NX-2041. DOB: 31/02/2004.');
+});
 test('custom terms handle unicode and regex punctuation literally', () => {
   const text = 'Meet दिशा at A+B (HQ). दिशा will attend.';
   const r = scan(text, ['दिशा', 'A+B (HQ)']);
