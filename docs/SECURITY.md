@@ -1,4 +1,4 @@
-# Security model — MIRAGE 1.3 RC
+# Security model — MIRAGE 1.4 RC
 
 ## Protected boundary
 
@@ -20,6 +20,12 @@ Restored values are displayed only in MIRAGE. No vault, original prompt or passp
 - No automatic Send, no overwrite of existing drafts, no heuristic search through unrelated page content.
 - Strict extension CSP, no network connections, no third-party runtime code.
 - Loopback development server, fixed resource allowlist, Host validation, no-store responses and frame restrictions.
+
+## Prepared AWS boundary
+
+The optional, undeployed AWS stack accepts locally masked English text only after explicit consent. Cognito authenticates requests, API Gateway allows one configured HTTPS origin, and Lambda repeats a conservative residual email/phone/ID/secret check before calling Comprehend. Only name/address offset metadata returns to the browser. Application code does not store prompts or detected values; DynamoDB stores expiring daily aggregate counters only. API request/response body tracing is disabled and the function code emits no logs.
+
+This is source-level evidence, not evidence of a live AWS deployment or complete data-loss prevention. Comprehend still processes the masked text if the optional path is enabled. Authentication UX, consent UX, account logging configuration, budgets, live browser behavior and an independent AWS privacy review remain required before activation.
 
 ## Known limits
 

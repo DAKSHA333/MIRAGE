@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Optional privacy-safe name and address suggestions for MIRAGE.
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: https://mirage-phi-lilac.vercel.app
+    Description: Exact HTTPS origin allowed to call the API.
+    AllowedPattern: ^https://[A-Za-z0-9.-]+(?::[0-9]{1,5})?$
+  StageName:
+    Type: String
+    Default: prod
+    AllowedPattern: ^[A-Za-z0-9_-]+$
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 10
+    Tracing: Active
+    Environment:
+      Variables:
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        METRICS_TABLE: !Ref AggregateMetrics
+
+Resources:
+  MirageUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${AWS::StackName}-users
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+  MirageUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: mirage-browser
+      UserPoolId: !Ref MirageUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+
+  AggregateMetrics:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: day
+          AttributeType: S
+      KeySchema:
+        - AttributeName: day
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+
+  MirageApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-api
+      StageName: !Ref StageName
+      EndpointConfiguration: REGIONAL
+      Cors:
+        AllowMethods: "'POST,OPTIONS'"
+        AllowHeaders: "'Authorization,Content-Type'"
+        AllowOrigin: !Sub "'${AllowedOrigin}'"
+      Auth:
+        DefaultAuthorizer: MirageCognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          MirageCognitoAuthorizer:
+            UserPoolArn: !GetAtt MirageUserPool.Arn
+      MethodSettings:
+        - ResourcePath: /*
+          HttpMethod: '*'
+          DataTraceEnabled: false
+          LoggingLevel: ERROR
+          MetricsEnabled: true
+
+  PrivacyScanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-privacy-scan
+      CodeUri: functions/privacy-scan/
+      Handler: index.handler
+      Description: Returns offset-only Comprehend suggestions for locally masked English text.
+      Policies:
+        - Statement:
+            - Sid: DetectNamesAndAddresses
+              Effect: Allow
+              Action: comprehend:DetectPiiEntities
+              Resource: '*'
+            - Sid: WriteAggregateMetrics
+              Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource: !GetAtt AggregateMetrics.Arn
+      Events:
+        Scan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MirageApi
+            Path: /v1/scan
+            Method: POST
+
+Outputs:
+  ApiEndpoint:
+    Description: Authenticated scan endpoint.
+    Value: !Sub https://${MirageApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}/v1/scan
+  UserPoolId:
+    Value: !Ref MirageUserPool
+  UserPoolClientId:
+    Value: !Ref MirageUserPoolClient
+  MetricsTableName:
+    Value: !Ref AggregateMetrics

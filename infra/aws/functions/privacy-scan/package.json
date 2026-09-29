@@ -1,0 +1,10 @@
+{
+  "name": "mirage-aws-privacy-scan",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-comprehend": "3.1142.0",
+    "@aws-sdk/client-dynamodb": "3.1142.0"
+  }
+}

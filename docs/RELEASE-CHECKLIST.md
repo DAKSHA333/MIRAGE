@@ -1,6 +1,6 @@
 # Public-release gates
 
-The 1.3.0 ZIP is a release candidate. A passing local suite does not mean these gates have passed.
+The 1.4.0 ZIP is a release candidate. A passing local suite does not mean these gates have passed.
 
 ## Engineering checks completed locally
 
@@ -14,10 +14,11 @@ The 1.3.0 ZIP is a release candidate. A passing local suite does not mean these 
 - [x] Guided judge workflow, realistic onboarding and patient scenarios, and local privacy receipt checks.
 - [x] Extension-only deterministic ZIP with SHA-256 manifest and ZIP integrity check.
 - [x] Privacy notice, threat model, installation and demo instructions.
+- [x] Optional AWS SAM stack with Cognito authorization, residual-data gate, offset-only Comprehend output, expiring aggregate metrics and unit-tested privacy contract.
 
 ## Still required before public production
 
-- [ ] Install/reload 1.3.0 in actual Chrome; verify side-panel behavior, optional site-access prompt, Disconnect revocation, service-worker suspension and recovery.
+- [ ] Install/reload 1.4.0 in actual Chrome; verify side-panel behavior, optional site-access prompt, Disconnect revocation, service-worker suspension and recovery.
 - [ ] Test current signed-in ChatGPT and Gemini with synthetic data only. Check empty/multiline editors, navigation, preexisting drafts, missing permissions, streaming and multiple replies. Verify the provider receives only the approved text.
 - [ ] Complete mouse/touch and keyboard checks on desktop and side-panel widths. Prior browser mouse automation was unreliable; keyboard flow worked, so mouse behavior is not certified.
 - [ ] Verify real browser download/upload backup workflow, corrupted file, wrong passphrase and forgotten-passphrase copy. Automated DOM and crypto coverage is already present.
@@ -26,6 +27,7 @@ The 1.3.0 ZIP is a release candidate. A passing local suite does not mean these 
 - [ ] Test with a small consenting pilot group and record issues without collecting raw prompts.
 - [ ] Publish a privacy policy with the actual operator/support contact; complete Chrome Web Store listing, disclosures and review.
 - [ ] Run CI in the actual source repository; establish signed release ownership, update/rollback process and issue triage.
+- [ ] Before enabling AWS: deploy to a controlled AWS account, configure budgets and account logging, review data handling, implement Cognito and per-scan consent UX, and test the complete masked-text round trip in `ap-south-1`.
 
 ## Demo sequence
 

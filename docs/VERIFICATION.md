@@ -1,14 +1,15 @@
-# Verification — MIRAGE 1.3.0 RC
+# Verification — MIRAGE 1.4.0 RC
 
 ## Automated results
 
-- `npm test`: **65 passed, 0 failed**. Covers detection, label-aware identity fields, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, guided judge mode, privacy receipts, realistic demo data, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
+- `npm test`: **70 passed, 0 failed**. Covers detection, label-aware identity fields, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, guided judge mode, privacy receipts, realistic demo data, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization, provider DOM fixtures, and the optional AWS request/response privacy boundary.
 - One regression test additionally runs 250 deterministic round-trip combinations. These are correctness cases, not a representative accuracy benchmark.
 - Backup tests cover AES-GCM round trip, wrong passphrase, tampering, bounded parameters/schema, import conflicts, session expiry and cancellation.
 - DOM-based UI test completes encrypted download creation, clear, backup unlock, and restoration of an earlier reply.
 - `npm run build`: passed. Deterministic extension ZIP and SHA-256 file manifest generated. ZIP integrity, archive hash and root manifest verified independently using Python.
 - `npm audit --audit-level=high`: reported zero vulnerabilities at verification time. No third-party runtime dependency ships in the extension.
 - Local server checks passed: allowed resource GET/HEAD, denied unknown paths, forbidden Host, and refused POST. These were direct HTTP checks against the running server.
+- AWS core tests require explicit consent, English-only masked input and a bounded scan ID; reject obvious residual identifiers/secrets; filter Comprehend output to offset-only name/address suggestions; and assert the SAM template's Cognito authorization, disabled API body tracing, TTL and narrow IAM actions.
 
 ## Browser evidence
 
@@ -18,10 +19,11 @@ Mouse automation was unreliable in that browser session and was not conclusively
 
 ## Explicitly not verified
 
-- Full Chrome service-worker/side-panel lifecycle for 1.3.0. The user supplied evidence that 1.1.1 connected successfully to ChatGPT after the permission-flow fix.
+- Full Chrome service-worker/side-panel lifecycle for 1.4.0. The user supplied evidence that 1.1.1 connected successfully to ChatGPT after the permission-flow fix.
 - Signed-in live ChatGPT/Gemini adapters, provider transmissions, or streaming reply behavior. Adapters were tested against synthetic fixtures only.
 - Browser-native backup file download/upload completion; DOM tests verified app behavior and encryption.
 - Independent security review, broad detection accuracy, store approval or production rollout.
 - GitHub CI execution for this commit has not been independently verified.
+- AWS deployment, account-level logging/privacy configuration, Cognito sign-in UX and end-to-end Comprehend behavior. The stack is prepared but no AWS credentials are configured on this machine.
 
 The release is suitable for controlled evaluation. See RELEASE-CHECKLIST.md for public-release gates. Do not equate this evidence with 100% secret detection or 95% personal-data detection.

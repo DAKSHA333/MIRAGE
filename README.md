@@ -1,4 +1,4 @@
-# MIRAGE 1.3 — Release candidate
+# MIRAGE 1.4 — Release candidate
 
 A private AI drafting workspace for Team Nexora. Write in MIRAGE, mask locally, review the preview, and share only that preview. Restore AI replies inside MIRAGE.
 
@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.3.0-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.4.0-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
 5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
 6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
@@ -63,7 +63,13 @@ Rules can miss data or produce false positives. Names and addresses are not comp
 
 The extension installs with only `sidePanel`, `activeTab` and `scripting`. It declares ChatGPT and Gemini as optional host permissions; MIRAGE requests the selected site only when you click Connect, and Disconnect removes that grant. It has no install-time host access, background page monitoring, storage permission, analytics, external scripts, cloud scanner or account. Only supported HTTPS ChatGPT/Gemini origins can receive the approved preview. Provider adapters execute in the isolated world, in the top frame, and verify the connected tab and URL.
 
-The local workspace supports manual copy/paste. Chrome integration requires the installed extension. No AWS services are configured; adding optional AWS processing needs a separately evaluated privacy boundary.
+The local workspace supports manual copy/paste. Chrome integration requires the installed extension. No AWS services are connected to the app in this release.
+
+## Optional AWS production path
+
+Version 1.4 adds a deployable AWS SAM stack matching the challenge architecture while preserving the local-first boundary. After local identifiers and secrets are removed, a future opt-in flow can send masked English text through Cognito and API Gateway to Lambda. Lambda runs a second residual-data check, asks Amazon Comprehend only for name/address suggestions, and returns character offsets without echoing detected values. DynamoDB stores approximate daily counts with a 90-day expiry, never prompt text or token mappings.
+
+The AWS source is prepared and unit-tested but not deployed or connected to this release because this machine has no configured AWS CLI credentials. The live app therefore continues to make no prompt network request. See `infra/aws/README.md` for deployment steps and `docs/AWS-ARCHITECTURE.md` for the data boundaries.
 
 See `extension/privacy.html` for the user-facing privacy notice and `docs/SECURITY.md` for the threat model.
 
@@ -89,13 +95,14 @@ The deterministic build validates JavaScript and the manifest, packages extensio
 | `extension/background.js` | Validated extension-only message boundary |
 | `extension/providers.js` | Narrow provider adapters, no Send action |
 | `scripts/build.mjs` | Deterministic ZIP and file hashes |
+| `infra/aws/` | Optional authenticated AWS scan stack and Lambda boundary |
 | `tests/` | Detection, security, crypto, UI and adapter tests |
 
 See `docs/VERIFICATION.md` for observed test evidence and `docs/RELEASE-CHECKLIST.md` for unresolved public-release gates.
 
 ## Vercel deployment
 
-`vercel.json` builds and tests a static browser workspace in `web-dist`. The hosted app keeps prompt processing in the browser. It includes a downloadable extension ZIP and SHA-256 release manifest under `/downloads/`. No prompt API or database is deployed. Vercel still receives ordinary web-request metadata; see the privacy notice.
+`vercel.json` builds and tests a static browser workspace in `web-dist`. The hosted app keeps prompt processing in the browser. It includes a downloadable extension ZIP and SHA-256 release manifest under `/downloads/`. The optional AWS stack is source code only; no prompt API or database is deployed with Vercel. Vercel still receives ordinary web-request metadata; see the privacy notice.
 
 ```sh
 npm run build:web
