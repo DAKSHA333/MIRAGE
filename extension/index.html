@@ -9,7 +9,7 @@
 </head>
 <body>
   <aside class="sidebar">
-    <a class="brand" href="#workspace" aria-label="MIRAGE home"><span class="brand-icon">M</span>MIRAGE<span class="version">1.1.1 RC</span></a>
+    <a class="brand" href="#workspace" aria-label="MIRAGE home"><span class="brand-icon">M</span>MIRAGE<span class="version">1.1.2 RC</span></a>
     <div class="sidebar-caption">YOUR PRIVACY WORKSPACE</div>
     <a class="nav-item active" href="#workspace"><span>◈</span> Protect a prompt</a>
     <a class="nav-item" href="#reply-section"><span>↳</span> Restore a reply</a>
@@ -27,14 +27,14 @@
     <div id="error-banner" class="error-banner" role="alert" hidden></div>
     <section class="work-grid" aria-label="Prompt protection">
       <article class="panel input-panel"><div class="panel-heading"><div><span class="step">01</span><h2>Your original prompt</h2></div><span class="small muted">Only on this device</span></div>
-        <div class="samples"><span>Try an example</span><button id="sample-personal">Personal details</button><button id="sample-secret">Secret key</button></div>
+        <div class="samples"><span>Try an example</span><button id="sample-personal">Intern onboarding</button><button id="sample-secret">Leaked credentials</button></div>
         <label class="sr-only" for="prompt">Original prompt</label><textarea id="prompt" maxlength="30000" placeholder="Write your private draft here, before it reaches a chatbot…" spellcheck="false" autocomplete="off"></textarea>
         <div class="editor-footer"><span><span class="tiny-lock">◇</span> Original text stays in this tab</span><span id="char-count">0 / 30,000</span></div>
-        <details class="custom-details"><summary>Add names or details to mask <span>Optional</span></summary><label for="custom">One private term per line. Useful for names, addresses, or anything the rules miss.</label><textarea id="custom" maxlength="3000" rows="3" placeholder="Priya Nair&#10;Presidency University"></textarea></details>
+        <details class="custom-details"><summary>Add names or details to mask <span>Optional</span></summary><label for="custom">One private term per line. Useful for names, addresses, or anything the rules miss.</label><textarea id="custom" maxlength="3000" rows="3" placeholder="Ananya Deshmukh&#10;Nexora Labs"></textarea></details>
         <div class="scan-row"><span class="small muted">Local rules. No uploads.</span><button class="button primary" id="scan">Scan & mask <span>→</span></button></div>
       </article>
       <article class="panel output-panel"><div class="panel-heading"><div><span class="step">02</span><h2>What the AI will see</h2></div><span id="result-badge" class="badge">Awaiting scan</span></div>
-        <div id="empty-preview" class="empty-preview"><div class="privacy-symbol">[ … ]</div><h3>A little distance from your data.</h3><p>Your masked prompt will appear here.<br>Real details become reversible tokens.</p><span class="example-token">Priya Nair <span>→</span> [PERSON_1]</span></div>
+        <div id="empty-preview" class="empty-preview"><div class="privacy-symbol">[ … ]</div><h3>A little distance from your data.</h3><p>Your masked prompt will appear here.<br>Real details become reversible tokens.</p><span class="example-token">Ananya Deshmukh <span>→</span> [PERSON_1]</span></div>
         <pre id="masked" class="text-output" hidden></pre>
         <div id="blocked-view" class="blocked-view" hidden><div class="block-symbol">!</div><h3>Let’s keep that secret here.</h3><p>A credential or card number was detected. Remove it from your original prompt and scan again.</p><strong>Copy is blocked for this prompt.</strong></div>
         <label class="review-check"><input type="checkbox" id="reviewed" disabled><span>I reviewed the entire preview for any details MIRAGE missed.</span></label>
@@ -49,7 +49,7 @@
     </section>
     <section id="vault-section" class="panel vault-panel"><div class="panel-heading"><div><span class="step">◇</span><h2>Your session vault</h2></div><span class="badge" id="vault-count">0 scans in memory</span></div><div class="vault-content"><div><h3>Keep your keys to the conversation.</h3><p>Up to 20 scans stay in memory. Save an encrypted backup if you need to restore replies after closing MIRAGE. Only token mappings are saved, not complete prompts or replies.</p><p><strong>Auto-clear after 15 minutes of inactivity.</strong> Closing or reloading clears the session. Your clipboard is not cleared.</p></div><div class="vault-buttons"><button class="button subtle" id="save-vault" disabled>Save encrypted backup</button><button class="button subtle" id="load-vault">Unlock a backup</button><input type="file" id="backup-file" accept=".mirage,application/json" hidden></div></div></section>
     <details class="limits"><summary>What this release protects, and where it can miss</summary><p>Local rules mask supported IDs, contact details, names after introductions, and terms you add. Names and addresses are not comprehensively detected. PAN, UPI and IFSC use format checks; Aadhaar uses a checksum. Health information remains unless you add it as a private term. Images, files, voice, and text entered directly into chatbot pages are outside protection. Obfuscated or unfamiliar secrets can be missed.</p><p>Chat insertion is a beta adapter that stops on unsupported layouts or existing drafts. Always review the draft in the chatbot before sending. AI sites can change without notice.</p></details>
-    <footer class="main-footer"><span><strong>Built for review before sharing.</strong> Local processing. No analytics. No account. <a href="privacy.html" target="_blank" rel="noopener">Privacy & security</a></span><span>MIRAGE / 1.1.1 RC</span></footer>
+    <footer class="main-footer"><span><strong>Built for review before sharing.</strong> Local processing. No analytics. No account. <a href="privacy.html" target="_blank" rel="noopener">Privacy & security</a></span><span>MIRAGE / 1.1.2 RC</span></footer>
     <div id="toast" role="status" aria-live="polite"></div><p class="sr-only" id="announcement" aria-live="polite"></p>
   </main>
   <dialog id="vault-dialog" aria-labelledby="vault-dialog-title"><form id="vault-form"><h2 id="vault-dialog-title">Encrypt your session</h2><p id="vault-dialog-note">Use a unique passphrase. MIRAGE cannot recover a forgotten passphrase.</p><label for="passphrase">Passphrase (at least 12 characters)</label><input id="passphrase" type="password" minlength="12" maxlength="256" autocomplete="off" required><div id="confirm-wrap"><label for="confirm-passphrase">Confirm passphrase</label><input id="confirm-passphrase" type="password" minlength="12" maxlength="256" autocomplete="off"></div><p id="vault-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button subtle" id="cancel-vault">Cancel</button><button type="submit" class="button primary" id="submit-vault">Encrypt & download</button></div></form></dialog>

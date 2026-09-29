@@ -1,6 +1,6 @@
 # Public-release gates
 
-The 1.1.1 ZIP is a release candidate. A passing local suite does not mean these gates have passed.
+The 1.1.2 ZIP is a release candidate. A passing local suite does not mean these gates have passed.
 
 ## Engineering checks completed locally
 
@@ -15,7 +15,7 @@ The 1.1.1 ZIP is a release candidate. A passing local suite does not mean these 
 
 ## Still required before public production
 
-- [ ] Install/reload 1.1.1 in actual Chrome; verify side-panel behavior, optional site-access prompt, Disconnect revocation, service-worker suspension and recovery.
+- [ ] Install/reload 1.1.2 in actual Chrome; verify side-panel behavior, optional site-access prompt, Disconnect revocation, service-worker suspension and recovery.
 - [ ] Test current signed-in ChatGPT and Gemini with synthetic data only. Check empty/multiline editors, navigation, preexisting drafts, missing permissions, streaming and multiple replies. Verify the provider receives only the approved text.
 - [ ] Complete mouse/touch and keyboard checks on desktop and side-panel widths. Prior browser mouse automation was unreliable; keyboard flow worked, so mouse behavior is not certified.
 - [ ] Verify real browser download/upload backup workflow, corrupted file, wrong passphrase and forgotten-passphrase copy. Automated DOM and crypto coverage is already present.

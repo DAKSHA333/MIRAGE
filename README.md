@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. On Windows, `START-MIRAGE.cmd` starts the server and
 
 1. Open `chrome://extensions` in Chrome 116 or newer.
 2. Enable Developer mode.
-3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.1.1-rc.zip` and select the extracted folder containing `manifest.json`.
+3. Choose **Load unpacked**, then select this project's `extension` folder. Alternatively, extract `dist/MIRAGE-1.1.2-rc.zip` and select the extracted folder containing `manifest.json`.
 4. If updating the previous unpacked extension, click **Reload** on its extension card, then close and reopen its workspace. Save an encrypted backup before reloading if you have mappings to keep.
 5. Pin MIRAGE. Open ChatGPT or Gemini, then click the MIRAGE toolbar icon to open its private side panel.
 6. Choose the site in MIRAGE and click **Connect current chat**. Chrome asks you to allow access only to that site if it is not already granted. The active tab must match your choice. Use **Disconnect** to remove that access.
@@ -34,7 +34,7 @@ The latest ZIP has the manifest at its root. `MIRAGE-v1-extension.zip` is the ol
 5. Check the chatbot draft and send it yourself. Ask the chatbot to preserve the exact MIRAGE tokens.
 6. Use **Get latest reply**, or paste the reply. Choose its scan and click **Restore details**. Originals appear only in MIRAGE.
 
-For a demonstration without an AI account, use **Personal details**, **Scan & mask**, **Try a sample reply**, and **Restore details**. The sample reply is explicitly canned local text, not an AI response.
+For a demonstration without an AI account, use **Intern onboarding**, **Scan & mask**, **Try a sample reply**, and **Restore details**. The scenario uses believable but synthetic identity data, and the formatted sample reply is explicitly local text rather than an AI response.
 
 ## Session vault
 

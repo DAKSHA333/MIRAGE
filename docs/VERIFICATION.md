@@ -1,8 +1,8 @@
-# Verification — MIRAGE 1.1.1 RC
+# Verification — MIRAGE 1.1.2 RC
 
 ## Automated results
 
-- `npm test`: **60 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
+- `npm test`: **61 passed, 0 failed**. Covers detection, overlap leakage, Unicode normalization/control rejection, secret patterns, exact restoration, per-scan isolation, realistic demo data, UI approval and stale-state gates, plain-text rendering, explicit site permission requests, worker authorization and provider DOM fixtures.
 - One regression test additionally runs 250 deterministic round-trip combinations. These are correctness cases, not a representative accuracy benchmark.
 - Backup tests cover AES-GCM round trip, wrong passphrase, tampering, bounded parameters/schema, import conflicts, session expiry and cancellation.
 - DOM-based UI test completes encrypted download creation, clear, backup unlock, and restoration of an earlier reply.

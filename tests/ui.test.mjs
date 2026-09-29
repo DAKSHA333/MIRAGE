@@ -34,7 +34,7 @@ test('preview approval gates copying and edits revoke the approval', async () =>
   assert.equal(f.el('copy').disabled, true); assert.equal(f.el('reviewed').disabled, false);
   f.el('copy').click(); await tick(); assert.equal(f.writes.length, 0);
   f.approve(); f.el('copy').click(); await tick(); assert.equal(f.writes.length, 1);
-  assert.match(f.writes[0], /\[MG_/); assert.ok(!f.writes[0].includes('Priya Nair'));
+  assert.match(f.writes[0], /\[MG_/); assert.ok(!f.writes[0].includes('Ananya Deshmukh'));
   f.input('prompt', 'new draft'); assert.equal(f.el('copy').disabled, true); assert.equal(f.el('reviewed').checked, false); f.close();
 });
 test('detected secrets disable review, copy and insertion', () => {
@@ -48,6 +48,16 @@ test('editing a new draft retains the earlier scan for reply restoration', () =>
   f.input('prompt', 'Email second@example.com'); f.el('scan').click(); assert.equal(f.el('session-select').options.length, 2);
   f.el('session-select').value = firstId; f.el('session-select').dispatchEvent(new f.w.Event('change'));
   f.input('reply', old); f.el('restore').click(); assert.equal(f.el('restored').textContent, 'Email first@example.com'); f.close();
+});
+test('onboarding demo masks realistic fields and restores a formatted local reply', () => {
+  const f = setup(); f.el('sample-personal').click();
+  assert.match(f.el('prompt').value, /software engineering intern/); f.el('scan').click();
+  assert.equal(f.el('finding-count').textContent, '4');
+  for (const value of ['Ananya Deshmukh', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(!f.el('masked').textContent.includes(value));
+  f.el('demo-reply').click(); assert.match(f.el('reply').value, /Subject: Confirmation of onboarding details/); assert.ok(!f.el('reply').value.includes('Ananya Deshmukh'));
+  f.el('restore').click();
+  for (const value of ['Ananya Deshmukh', 'DEMOX1234A', '+91 98765 43210', 'ananya.demo@student.example']) assert.ok(f.el('restored').textContent.includes(value));
+  f.close();
 });
 test('HTML and script-shaped text is rendered literally in preview and replies', () => {
   const f = setup(); f.input('prompt', '<img src=x onerror=alert(1)> a@example.com'); f.el('scan').click();
@@ -67,7 +77,7 @@ test('side-panel bridge receives approved masked text, never original values', a
   assert.equal(JSON.stringify(f.permissionRequests), JSON.stringify([{ origins: ['https://chatgpt.com/*'] }]));
   f.el('sample-personal').click(); f.el('scan').click(); f.approve(); f.el('insert').click(); await tick();
   const message = f.messages.find(x => x.type === 'insert'); assert.ok(message); assert.match(message.text, /\[MG_/);
-  assert.ok(!JSON.stringify(f.messages).includes('Priya Nair')); assert.ok(!JSON.stringify(f.messages).includes('ABCDE1234F')); f.close();
+  assert.ok(!JSON.stringify(f.messages).includes('Ananya Deshmukh')); assert.ok(!JSON.stringify(f.messages).includes('DEMOX1234A')); f.close();
 });
 test('connection asks only for the selected site and handles denial without messaging the worker', async () => {
   const denied = setup(true, false); denied.el('provider-choice').value = 'https://gemini.google.com'; denied.el('connect').click(); await tick(); await tick();

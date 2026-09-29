@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "MIRAGE — Private AI Workspace",
-  "version": "1.1.1",
-  "version_name": "1.1.1 Release Candidate",
+  "version": "1.1.2",
+  "version_name": "1.1.2 Release Candidate",
   "minimum_chrome_version": "116",
   "description": "Mask personal details in a private side panel. Review before inserting into ChatGPT or Gemini. Restore replies locally.",
   "permissions": ["sidePanel", "activeTab", "scripting"],
